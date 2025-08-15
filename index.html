@@ -13,16 +13,217 @@
     <meta property="og:image" content="https://via.placeholder.com/1200x630/667eea/ffffff?text=MarioPro">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
     
-    <!-- Three.js e Loader Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/ColladaLoader.js"></script>
+    <!-- Three.js Bundle completo da CDN sicuro -->
+    <script>
+        // Caricamento sicuro di Three.js con fallback
+        function loadThreeJS() {
+            console.log('Caricamento Three.js...');
+            
+            // CDN primario
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+            script.crossOrigin = 'anonymous';
+            
+            script.onload = function() {
+                console.log('Three.js caricato con successo');
+                loadAdditionalLoaders();
+            };
+            
+            script.onerror = function() {
+                console.error('Errore caricamento Three.js dal CDN primario, provo fallback...');
+                loadThreeJSFallback();
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        function loadThreeJSFallback() {
+            // CDN di fallback
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/three@0.128.0/build/three.min.js';
+            script.crossOrigin = 'anonymous';
+            
+            script.onload = function() {
+                console.log('Three.js caricato dal fallback');
+                loadAdditionalLoaders();
+            };
+            
+            script.onerror = function() {
+                console.error('Impossibile caricare Three.js');
+                showError('Impossibile caricare le librerie 3D. Controlla la connessione internet.');
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        function loadAdditionalLoaders() {
+            // Carica i loader necessari inline per evitare problemi CDN
+            loadOBJLoader();
+            loadGLTFLoader();
+            loadQRCode();
+        }
+        
+        function loadOBJLoader() {
+            // OBJLoader inline semplificato
+            const script = document.createElement('script');
+            script.innerHTML = `
+                THREE.OBJLoader = function() {
+                    this.materials = null;
+                };
+                
+                THREE.OBJLoader.prototype = {
+                    constructor: THREE.OBJLoader,
+                    
+                    parse: function(text) {
+                        const group = new THREE.Group();
+                        const vertices = [];
+                        const normals = [];
+                        const uvs = [];
+                        const faces = [];
+                        
+                        const lines = text.split('\\n');
+                        
+                        for (let i = 0; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (line.length === 0 || line.charAt(0) === '#') continue;
+                            
+                            const parts = line.split(/\\s+/);
+                            
+                            if (parts[0] === 'v') {
+                                vertices.push(
+                                    parseFloat(parts[1]),
+                                    parseFloat(parts[2]),
+                                    parseFloat(parts[3])
+                                );
+                            } else if (parts[0] === 'vn') {
+                                normals.push(
+                                    parseFloat(parts[1]),
+                                    parseFloat(parts[2]),
+                                    parseFloat(parts[3])
+                                );
+                            } else if (parts[0] === 'vt') {
+                                uvs.push(
+                                    parseFloat(parts[1]),
+                                    parseFloat(parts[2])
+                                );
+                            } else if (parts[0] === 'f') {
+                                for (let j = 1; j < parts.length - 2; j++) {
+                                    faces.push(parts[1], parts[j + 1], parts[j + 2]);
+                                }
+                            }
+                        }
+                        
+                        if (vertices.length > 0) {
+                            const geometry = new THREE.BufferGeometry();
+                            const positions = [];
+                            
+                            for (let i = 0; i < faces.length; i++) {
+                                const face = faces[i].split('/');
+                                const vertexIndex = parseInt(face[0]) - 1;
+                                
+                                positions.push(
+                                    vertices[vertexIndex * 3],
+                                    vertices[vertexIndex * 3 + 1],
+                                    vertices[vertexIndex * 3 + 2]
+                                );
+                            }
+                            
+                            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                            geometry.computeVertexNormals();
+                            
+                            const material = new THREE.MeshBasicMaterial({ color: 0x888888 });
+                            const mesh = new THREE.Mesh(geometry, material);
+                            group.add(mesh);
+                        }
+                        
+                        return group;
+                    }
+                };
+            `;
+            document.head.appendChild(script);
+            console.log('OBJLoader caricato');
+        }
+        
+        function loadGLTFLoader() {
+            // GLTFLoader semplificato (solo per compatibilità)
+            const script = document.createElement('script');
+            script.innerHTML = `
+                THREE.GLTFLoader = function() {};
+                THREE.GLTFLoader.prototype = {
+                    constructor: THREE.GLTFLoader,
+                    parse: function(data, path, onLoad, onError) {
+                        if (onError) {
+                            onError(new Error('GLTFLoader semplificato - formato non completamente supportato'));
+                        }
+                    }
+                };
+            `;
+            document.head.appendChild(script);
+            console.log('GLTFLoader placeholder caricato');
+        }
+        
+        function loadQRCode() {
+            // QR Code generator inline
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+            script.crossOrigin = 'anonymous';
+            
+            script.onload = function() {
+                console.log('QR Code library caricata');
+                window.allLibrariesLoaded = true;
+                if (window.domReady) {
+                    startMarioPro();
+                }
+            };
+            
+            script.onerror = function() {
+                console.warn('QR Code library non caricata, continuo senza');
+                window.allLibrariesLoaded = true;
+                if (window.domReady) {
+                    startMarioPro();
+                }
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        function showError(message) {
+            document.body.innerHTML = \`
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #ff4444;
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    font-family: Arial, sans-serif;
+                    z-index: 10000;
+                ">
+                    <h3>Errore di Caricamento</h3>
+                    <p>\${message}</p>
+                    <button onclick="location.reload()" style="
+                        background: white;
+                        color: #ff4444;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                    ">Ricarica Pagina</button>
+                </div>
+            \`;
+        }
+        
+        // Avvia il caricamento
+        window.allLibrariesLoaded = false;
+        window.domReady = false;
+        loadThreeJS();
+    </script>
     
-    <!-- QR Code Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -1277,50 +1478,115 @@
             triangles: 0
         };
 
-        // Inizializzazione
+        // Inizializzazione con controllo completo
         function init() {
-            const container = document.getElementById('viewer');
+            console.log('=== Inizializzazione MarioPro ===');
             
-            if (typeof THREE === 'undefined') {
-                console.error('Three.js non caricato!');
-                showNotification('Errore: Three.js non caricato', 'error');
+            const container = document.getElementById('viewer');
+            if (!container) {
+                console.error('Container viewer non trovato!');
+                showNotification('Errore: elemento viewer non trovato', 'error');
                 return;
             }
             
-            clock = new THREE.Clock();
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x2d3748);
+            // Verifica Three.js
+            if (typeof THREE === 'undefined') {
+                console.error('Three.js non disponibile');
+                showNotification('Three.js non caricato. Ricarica la pagina.', 'error');
+                return;
+            }
             
-            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(8, 6, 8);
-            camera.lookAt(0, 0, 0);
+            console.log('✓ Three.js versione:', THREE.REVISION);
             
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true, 
-                alpha: true,
-                powerPreference: "high-performance",
-                preserveDrawingBuffer: true
-            });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1;
-            container.appendChild(renderer.domElement);
+            // Verifica loader disponibili
+            const loaderStatus = {
+                OBJ: typeof THREE.OBJLoader !== 'undefined',
+                GLTF: typeof THREE.GLTFLoader !== 'undefined', 
+                Collada: typeof THREE.ColladaLoader !== 'undefined'
+            };
             
-            setupControls();
-            setupLighting();
-            createDemoModel();
-            setupEventListeners();
-            animate();
+            console.log('✓ Loader disponibili:', loaderStatus);
             
-            setTimeout(() => {
-                document.getElementById('welcomeScreen').style.display = 'none';
-                document.getElementById('viewerHUD').style.display = 'block';
-                document.getElementById('floatingControls').style.display = 'flex';
-            }, 2000);
+            try {
+                // Inizializzazione Three.js
+                clock = new THREE.Clock();
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x2d3748);
+                
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(8, 6, 8);
+                camera.lookAt(0, 0, 0);
+                
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: true, 
+                    alpha: true,
+                    powerPreference: "high-performance",
+                    preserveDrawingBuffer: true
+                });
+                
+                console.log('✓ Renderer creato');
+                
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Compatibilità per Three.js r140
+                if (THREE.REVISION >= 140) {
+                    renderer.outputColorSpace = THREE.SRGBColorSpace;
+                } else {
+                    renderer.outputEncoding = THREE.sRGBEncoding;
+                }
+                
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1;
+                container.appendChild(renderer.domElement);
+                
+                console.log('✓ Renderer configurato e aggiunto al DOM');
+                
+                setupControls();
+                console.log('✓ Controlli configurati');
+                
+                setupLighting();
+                console.log('✓ Illuminazione configurata');
+                
+                createDemoModel();
+                console.log('✓ Modello demo creato');
+                
+                setupEventListeners();
+                console.log('✓ Event listeners configurati');
+                
+                animate();
+                console.log('✓ Loop di animazione avviato');
+                
+                // UI setup con delay
+                setTimeout(() => {
+                    const welcomeScreen = document.getElementById('welcomeScreen');
+                    const viewerHUD = document.getElementById('viewerHUD');
+                    const floatingControls = document.getElementById('floatingControls');
+                    
+                    if (welcomeScreen) {
+                        welcomeScreen.style.display = 'none';
+                        console.log('✓ Schermata welcome nascosta');
+                    }
+                    if (viewerHUD) {
+                        viewerHUD.style.display = 'block';
+                        console.log('✓ HUD mostrato');
+                    }
+                    if (floatingControls) {
+                        floatingControls.style.display = 'flex';
+                        console.log('✓ Controlli floating mostrati');
+                    }
+                    
+                    showNotification('MarioPro caricato con successo! 🚀', 'success');
+                }, 2000);
+                
+                console.log('=== MarioPro inizializzato correttamente ===');
+                
+            } catch (error) {
+                console.error('❌ Errore durante l\'inizializzazione:', error);
+                showNotification(`Errore nell'inizializzazione: ${error.message}`, 'error');
+            }
         }
         
         function setupControls() {
@@ -1700,4 +1966,785 @@
         }
         
         function loadOBJModel(file) {
-            if (typeof THREE.OBJLoader ===
+        function loadOBJModel(file) {
+            console.log('📦 Tentativo caricamento OBJ:', file.name);
+            
+            // Verifica che THREE e OBJLoader siano disponibili
+            if (typeof THREE === 'undefined') {
+                console.error('❌ THREE non disponibile');
+                hideLoadingScreen();
+                showNotification('Three.js non caricato correttamente', 'error');
+                return;
+            }
+            
+            if (typeof THREE.OBJLoader === 'undefined') {
+                console.error('❌ OBJLoader non disponibile');
+                hideLoadingScreen();
+                showNotification('OBJLoader non disponibile. Funzionalità limitata per file OBJ.', 'error');
+                return;
+            }
+            
+            try {
+                const loader = new THREE.OBJLoader();
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        console.log('📖 Parsing file OBJ...');
+                        updateLoadingProgress(30);
+                        
+                        const loadedObject = loader.parse(e.target.result);
+                        console.log('✅ OBJ parsato con successo');
+                        
+                        updateLoadingProgress(60);
+                        
+                        const material = new THREE.MeshStandardMaterial({
+                            color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6),
+                            metalness: 0.3,
+                            roughness: 0.4
+                        });
+                        
+                        let meshCount = 0;
+                        loadedObject.traverse(function(child) {
+                            if (child.isMesh) {
+                                child.material = material;
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                meshCount++;
+                            }
+                        });
+                        
+                        console.log(`✅ ${meshCount} mesh configurate`);
+                        updateLoadingProgress(80);
+                        
+                        model = loadedObject;
+                        loadedModelType = 'obj';
+                        centerAndScaleModel(model);
+                        updateLoadingProgress(95);
+                        
+                        scene.add(model);
+                        updateLoadingProgress(100);
+                        
+                        setTimeout(() => {
+                            hideLoadingScreen();
+                            showNotification(`✅ File OBJ caricato: ${file.name}`, 'success');
+                            setTimeout(() => fitToScreen(), 500);
+                        }, 500);
+                        
+                    } catch(error) {
+                        console.error('❌ Errore parsing OBJ:', error);
+                        hideLoadingScreen();
+                        showNotification('Errore nel parsing del file OBJ. Verifica che sia un file valido.', 'error');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    console.error('❌ Errore lettura file OBJ');
+                    hideLoadingScreen();
+                    showNotification('Errore nella lettura del file OBJ.', 'error');
+                };
+                
+                console.log('📚 Inizio lettura file...');
+                reader.readAsText(file);
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione OBJLoader:', error);
+                hideLoadingScreen();
+                showNotification('Errore nell\'inizializzazione del loader OBJ', 'error');
+            }
+        }
+        
+        function loadGLTFModel(file) {
+            console.log('Tentativo caricamento GLTF/GLB:', file.name);
+            
+            // Verifica che GLTFLoader sia disponibile  
+            if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') {
+                console.error('GLTFLoader non disponibile');
+                hideLoadingScreen();
+                showNotification('GLTFLoader non disponibile. I file GLTF/GLB non sono supportati al momento.', 'error');
+                return;
+            }
+            
+            try {
+                const loader = new THREE.GLTFLoader();
+                const reader = new FileReader();
+                const isGLB = file.name.toLowerCase().endsWith('.glb');
+                
+                reader.onload = function(e) {
+                    try {
+                        updateLoadingProgress(20);
+                        
+                        const onLoad = function(gltf) {
+                            updateLoadingProgress(60);
+                            
+                            model = gltf.scene;
+                            loadedModelType = isGLB ? 'glb' : 'gltf';
+                            
+                            model.traverse(function(child) {
+                                if (child.isMesh) {
+                                    child.castShadow = true;
+                                    child.receiveShadow = true;
+                                    
+                                    if (child.material) {
+                                        if (child.material.map) {
+                                            child.material.map.encoding = THREE.sRGBEncoding;
+                                        }
+                                        if (child.material.emissiveMap) {
+                                            child.material.emissiveMap.encoding = THREE.sRGBEncoding;
+                                        }
+                                        child.material.needsUpdate = true;
+                                    }
+                                }
+                            });
+                            
+                            updateLoadingProgress(80);
+                            
+                            if (gltf.animations && gltf.animations.length > 0) {
+                                mixer = new THREE.AnimationMixer(model);
+                                animations = gltf.animations;
+                                
+                                if (animations.length > 0) {
+                                    currentAnimationAction = mixer.clipAction(animations[0]);
+                                    currentAnimationAction.play();
+                                }
+                                
+                                showNotification(`${gltf.animations.length} animazioni trovate!`, 'info');
+                            }
+                            
+                            centerAndScaleModel(model);
+                            updateLoadingProgress(95);
+                            
+                            scene.add(model);
+                            updateLoadingProgress(100);
+                            
+                            setTimeout(() => {
+                                hideLoadingScreen();
+                                showNotification(`File ${isGLB ? 'GLB' : 'GLTF'} caricato: ${file.name}`, 'success');
+                                setTimeout(() => fitToScreen(), 500);
+                            }, 500);
+                        };
+                        
+                        const onError = function(error) {
+                            console.error('Errore caricamento GLTF:', error);
+                            hideLoadingScreen();
+                            showNotification(`Errore nel caricamento del file ${isGLB ? 'GLB' : 'GLTF'}.`, 'error');
+                        };
+                        
+                        if (isGLB) {
+                            loader.parse(e.target.result, '', onLoad, onError);
+                        } else {
+                            const text = e.target.result;
+                            loader.parse(text, '', onLoad, onError);
+                        }
+                        
+                    } catch(error) {
+                        console.error('Errore parsing GLTF:', error);
+                        hideLoadingScreen();
+                        showNotification(`Errore nel caricamento del file ${isGLB ? 'GLB' : 'GLTF'}.`, 'error');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    hideLoadingScreen();
+                    showNotification('Errore nella lettura del file.', 'error');
+                };
+                
+                if (isGLB) {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    reader.readAsText(file);
+                }
+                
+            } catch (error) {
+                console.error('Errore inizializzazione GLTFLoader:', error);
+                hideLoadingScreen();
+                showNotification('Errore nell\'inizializzazione del loader GLTF', 'error');
+            }
+        }
+        
+        function loadDAEModel(file) {
+            if (typeof THREE.ColladaLoader === 'undefined') {
+                console.error('ColladaLoader non caricato!');
+                hideLoadingScreen();
+                showNotification('Errore: ColladaLoader non disponibile', 'error');
+                return;
+            }
+            
+            const loader = new THREE.ColladaLoader();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    updateLoadingProgress(30);
+                    
+                    const collada = loader.parse(e.target.result);
+                    updateLoadingProgress(60);
+                    
+                    model = collada.scene;
+                    loadedModelType = 'dae';
+                    
+                    model.traverse(function(child) {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            if (child.material) {
+                                if (child.material.map) {
+                                    child.material.map.encoding = THREE.sRGBEncoding;
+                                }
+                                if (child.material.emissiveMap) {
+                                    child.material.emissiveMap.encoding = THREE.sRGBEncoding;
+                                }
+                                child.material.needsUpdate = true;
+                            } else {
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6),
+                                    metalness: 0.3,
+                                    roughness: 0.7
+                                });
+                            }
+                        }
+                    });
+                    
+                    updateLoadingProgress(80);
+                    
+                    if (collada.animations && collada.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        animations = collada.animations;
+                        
+                        if (animations.length > 0) {
+                            currentAnimationAction = mixer.clipAction(animations[0]);
+                            currentAnimationAction.play();
+                        }
+                        
+                        showNotification(`${collada.animations.length} animazioni DAE trovate!`, 'info');
+                    }
+                    
+                    centerAndScaleModel(model);
+                    updateLoadingProgress(95);
+                    
+                    scene.add(model);
+                    updateLoadingProgress(100);
+                    
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        showNotification(`File DAE caricato: ${file.name}`, 'success');
+                        setTimeout(() => fitToScreen(), 500);
+                    }, 500);
+                    
+                } catch(error) {
+                    console.error('Errore caricamento DAE:', error);
+                    hideLoadingScreen();
+                    showNotification('Errore nel caricamento del file DAE. Verifica che sia un file Collada valido.', 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                hideLoadingScreen();
+                showNotification('Errore nella lettura del file DAE.', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        function centerAndScaleModel(modelObject) {
+            if (!modelObject) return;
+            
+            const box = new THREE.Box3().setFromObject(modelObject);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            modelObject.position.sub(center);
+            
+            const maxDim = Math.max(size.x, size.y, size.z);
+            if (maxDim > 8) {
+                const scale = 8 / maxDim;
+                modelObject.scale.multiplyScalar(scale);
+            }
+            
+            const newBox = new THREE.Box3().setFromObject(modelObject);
+            if (newBox.min.y < 0) {
+                modelObject.position.y -= newBox.min.y;
+            }
+        }
+        
+        function showFileInfo(file) {
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileType = document.getElementById('fileType');
+            const fileFormat = document.getElementById('fileFormat');
+            
+            const extension = file.name.toLowerCase().split('.').pop();
+            
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileType.textContent = file.type || 'application/octet-stream';
+            fileFormat.textContent = extension.toUpperCase();
+            
+            fileInfo.classList.add('show');
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+        
+        function showLoadingScreen(message) {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = message;
+            loadingScreen.style.display = 'flex';
+            
+            const progressBar = document.querySelector('.loading-bar');
+            progressBar.style.width = '0%';
+        }
+        
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+        }
+        
+        function updateLoadingProgress(progress) {
+            const progressBar = document.querySelector('.loading-bar');
+            if (progressBar) {
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            }
+        }
+        
+        function updateZoomValue() {
+            const distance = camera.position.length();
+            const zoomLevel = 10 / distance;
+            document.getElementById('zoomValue').textContent = zoomLevel.toFixed(1) + 'x';
+            document.getElementById('zoomControl').value = zoomLevel;
+        }
+        
+        function resetCamera() {
+            camera.position.set(8, 6, 8);
+            camera.lookAt(0, 0, 0);
+            targetRotationX = 0;
+            targetRotationY = 0;
+            updateZoomValue();
+            showNotification('Vista camera ripristinata', 'success');
+        }
+        
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            const animIcon = document.getElementById('animIcon');
+            const animText = document.getElementById('animText');
+            
+            if (isAnimating) {
+                animIcon.className = 'fas fa-pause';
+                animText.textContent = 'Pausa';
+            } else {
+                animIcon.className = 'fas fa-play';
+                animText.textContent = 'Anima';
+            }
+            
+            showNotification(`Rotazione automatica ${isAnimating ? 'attivata' : 'disattivata'}`, 'info');
+        }
+        
+        function fitToScreen() {
+            if (!model) return;
+            
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = camera.fov * (Math.PI / 180);
+            const distance = Math.abs(maxDim / Math.sin(fov / 2)) * 1.5;
+            
+            camera.position.copy(center);
+            camera.position.z += distance;
+            camera.lookAt(center);
+            
+            const spherical = new THREE.Spherical();
+            spherical.setFromVector3(camera.position.clone().sub(center));
+            targetRotationY = spherical.theta;
+            targetRotationX = spherical.phi - Math.PI / 2;
+            
+            updateZoomValue();
+            showNotification('Modello centrato nella vista', 'success');
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    showNotification('Impossibile attivare la modalità fullscreen', 'error');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            
+            if (model) {
+                model.traverse(function(child) {
+                    if (child.isMesh && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => {
+                                if (mat.wireframe !== undefined) {
+                                    mat.wireframe = isWireframe;
+                                }
+                            });
+                        } else {
+                            if (child.material.wireframe !== undefined) {
+                                child.material.wireframe = isWireframe;
+                            }
+                        }
+                    }
+                });
+                
+                showNotification(`Modalità wireframe ${isWireframe ? 'attivata' : 'disattivata'}`, 'info');
+            }
+        }
+        
+        function captureScreenshot() {
+            try {
+                const canvas = renderer.domElement;
+                const link = document.createElement('a');
+                link.download = `screenshot-mariopro-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                showNotification('Screenshot salvato!', 'success');
+            } catch (error) {
+                console.error('Errore screenshot:', error);
+                showNotification('Errore nel salvataggio dello screenshot', 'error');
+            }
+        }
+        
+        function toggleStats() {
+            showStats = !showStats;
+            const statsOverlay = document.getElementById('statsOverlay');
+            statsOverlay.style.display = showStats ? 'block' : 'none';
+            showNotification(`Statistiche performance ${showStats ? 'mostrate' : 'nascoste'}`, 'info');
+        }
+        
+        function shareModel() {
+            if (!currentModelData) {
+                showNotification('Nessun modello caricato da condividere', 'error');
+                return;
+            }
+            
+            const maxSize = 100 * 1024;
+            if (currentModelData.fileSize > maxSize) {
+                showQRModal(null, true);
+                return;
+            }
+            
+            try {
+                const modelDataUrl = createModelDataUrl(currentModelData);
+                generateQRCode(modelDataUrl);
+                showQRModal(modelDataUrl, false);
+            } catch (error) {
+                console.error('Error creating QR code:', error);
+                showNotification('Errore nella creazione del QR code', 'error');
+            }
+        }
+        
+        function createModelDataUrl(modelData) {
+            const shareData = {
+                fileName: modelData.fileName,
+                fileType: modelData.fileType,
+                data: btoa(typeof modelData.data === 'string' ? modelData.data : String.fromCharCode(...new Uint8Array(modelData.data)))
+            };
+            
+            const baseUrl = window.location.origin + window.location.pathname;
+            const dataParam = btoa(JSON.stringify(shareData));
+            
+            return `${baseUrl}?model=${dataParam}`;
+        }
+        
+        function generateQRCode(url) {
+            const qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            
+            const qrContainer = document.getElementById('qrCodeContainer');
+            qrContainer.innerHTML = qr.createImgTag(4, 8);
+        }
+        
+        function showQRModal(dataUrl, sizeWarning = false) {
+            const modal = document.getElementById('qrModal');
+            const qrContainer = document.getElementById('qrCodeContainer');
+            
+            if (sizeWarning) {
+                qrContainer.innerHTML = `
+                    <div class="file-size-warning">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        <strong>File troppo grande!</strong><br>
+                        Il file è più grande di 100KB.<br>
+                        Per condividere questo modello:<br><br>
+                        1. Fai uno screenshot<br>
+                        2. Usa un servizio cloud<br>
+                        3. Comprimi il file
+                    </div>
+                `;
+            }
+            
+            modal.classList.add('show');
+        }
+        
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.remove('show');
+        }
+        
+        function downloadQRCode() {
+            const qrImg = document.querySelector('#qrCodeContainer img');
+            if (!qrImg) return;
+            
+            const link = document.createElement('a');
+            link.download = `qr-${currentFileName || 'model'}.png`;
+            link.href = qrImg.src;
+            link.click();
+            
+            showNotification('QR Code salvato!', 'success');
+        }
+        
+        function copyQRLink() {
+            if (!currentModelData) return;
+            
+            try {
+                const modelDataUrl = createModelDataUrl(currentModelData);
+                navigator.clipboard.writeText(modelDataUrl).then(() => {
+                    showNotification('Link copiato negli appunti!', 'success');
+                }).catch(() => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = modelDataUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showNotification('Link copiato!', 'success');
+                });
+            } catch (error) {
+                showNotification('Errore nella copia del link', 'error');
+            }
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileBtn = document.getElementById('mobileMenuBtn');
+            
+            if (sidebar && mobileBtn) {
+                sidebar.classList.toggle('open');
+                
+                if (sidebar.classList.contains('open')) {
+                    mobileBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    mobileBtn.style.background = 'var(--secondary-gradient)';
+                } else {
+                    mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    mobileBtn.style.background = 'var(--primary-gradient)';
+                }
+            }
+        }
+        
+        function setupMobileInteractions() {
+            const sidebar = document.getElementById('sidebar');
+            const viewer = document.getElementById('viewer');
+            
+            if (viewer) {
+                viewer.addEventListener('touchstart', (e) => {
+                    if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
+                        sidebar.classList.remove('open');
+                        const mobileBtn = document.getElementById('mobileMenuBtn');
+                        if (mobileBtn) {
+                            mobileBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                            mobileBtn.style.background = 'var(--primary-gradient)';
+                        }
+                    }
+                });
+            }
+            
+            if (sidebar) {
+                sidebar.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('viewer');
+            if (camera && container) {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+            
+            const mobileBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (window.innerWidth <= 768) {
+                if (mobileBtn) mobileBtn.style.display = 'block';
+                if (sidebar && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                }
+            } else {
+                if (mobileBtn) mobileBtn.style.display = 'none';
+                if (sidebar) sidebar.classList.remove('open');
+            }
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            const deltaTime = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(deltaTime);
+            }
+            
+            if (isAnimating && model) {
+                model.rotation.y += rotationSpeed;
+            }
+            
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime - lastTime >= 1000) {
+                stats.fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                stats.drawCalls = renderer.info.render.calls;
+                stats.triangles = renderer.info.render.triangles;
+                
+                if (showStats) {
+                    document.getElementById('fpsCounter').textContent = stats.fps;
+                    document.getElementById('drawCalls').textContent = stats.drawCalls;
+                    document.getElementById('triangles').textContent = stats.triangles.toLocaleString();
+                }
+                
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Avvio dell'applicazione con nuovo sistema di caricamento
+        window.allLibrariesLoaded = false;
+        window.domReady = false;
+        
+        function startMarioPro() {
+            if (window.allLibrariesLoaded && window.domReady) {
+                console.log('🚀 Avvio MarioPro - Tutte le librerie e DOM pronti');
+                
+                // Verifica finale che THREE sia disponibile
+                if (typeof THREE === 'undefined') {
+                    console.error('❌ THREE non disponibile anche dopo il caricamento');
+                    showError('Three.js non è stato caricato correttamente');
+                    return;
+                }
+                
+                try {
+                    init();
+                    setupMobileInteractions();
+                    console.log('✅ MarioPro avviato con successo');
+                } catch (error) {
+                    console.error('❌ Errore durante l\'avvio:', error);
+                    showError(`Errore durante l'avvio: ${error.message}`);
+                }
+            } else {
+                console.log('⏳ In attesa... Libraries:', window.allLibrariesLoaded, 'DOM:', window.domReady);
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 DOM caricato');
+            window.domReady = true;
+            startMarioPro();
+        });
+        
+        window.addEventListener('resize', onWindowResize);
+        
+        // Gestione errori globali con informazioni dettagliate
+        window.addEventListener('error', (event) => {
+            console.error('🔥 Errore globale:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+            
+            // Non mostrare errori di script esterni per evitare spam
+            if (event.filename && !event.filename.includes(window.location.hostname)) {
+                console.log('📡 Errore da script esterno ignorato');
+                return;
+            }
+            
+            if (event.message && event.message.includes('THREE')) {
+                showError('Problema con la libreria 3D. Ricarica la pagina.');
+            }
+        });
+        
+        // Gestione Promise rifiutate
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('💥 Promise rifiutata:', event.reason);
+            event.preventDefault();
+        });
+        
+        // Funzione di errore migliorata (già definita nel caricamento script)
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    text-align: center;
+                    font-family: 'Inter', Arial, sans-serif;
+                    z-index: 10000;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                ">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🚨</div>
+                    <h3 style="margin: 0 0 15px 0; font-size: 24px;">Errore MarioPro</h3>
+                    <p style="margin: 0 0 20px 0; opacity: 0.9;">${message}</p>
+                    <button onclick="location.reload()" style="
+                        background: rgba(255, 255, 255, 0.2);
+                        border: 2px solid rgba(255, 255, 255, 0.3);
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        🔄 Ricarica Pagina
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+    </script>
+</body>
+</html>
