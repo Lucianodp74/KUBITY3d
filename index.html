@@ -728,6 +728,8 @@
             text-align: center;
             color: white;
             z-index: 10;
+            width: 90%;
+            max-width: 400px;
         }
         
         .welcome-icon {
@@ -745,11 +747,108 @@
         .welcome-title {
             font-size: 42px;
             font-weight: 800;
-            margin-bottom: 15px;
+            margin-bottom: 30px;
             background: linear-gradient(135deg, #fff, #f0f0f0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        
+        .welcome-upload {
+            margin-top: 20px;
+        }
+        
+        .upload-zone-center {
+            background: var(--primary-gradient);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-zone-center.dragover {
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        .upload-zone-center::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(-45deg);
+            transition: transform 0.6s ease;
+        }
+        
+        .upload-zone-center:hover::before {
+            transform: rotate(-45deg) translateX(100%);
+        }
+        
+        .upload-zone-center:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--shadow-strong);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .upload-icon-center {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .upload-text-center h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .upload-text-center p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .supported-formats-center {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .format-badge-center {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .format-badge-center:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
         
         .loading-screen {
@@ -1237,39 +1336,6 @@
             
             <div class="section">
                 <div class="section-title">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    Carica Modello 3D
-                </div>
-                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <div class="upload-text">
-                        <h3>Trascina o Seleziona</h3>
-                        <p>Formati supportati:</p>
-                        <div class="supported-formats">
-                            <span class="format-badge">OBJ</span>
-                            <span class="format-badge">GLTF</span>
-                            <span class="format-badge">GLB</span>
-                            <span class="format-badge">DAE</span>
-                        </div>
-                        <div class="upload-button">
-                            <i class="fas fa-folder-open"></i>
-                            Sfoglia File
-                        </div>
-                    </div>
-                    <input type="file" id="fileInput" class="file-input" accept=".obj,.gltf,.glb,.dae">
-                    <div class="file-info" id="fileInfo">
-                        <strong>File:</strong> <span id="fileName">-</span><br>
-                        <strong>Dimensione:</strong> <span id="fileSize">-</span><br>
-                        <strong>Tipo:</strong> <span id="fileType">-</span><br>
-                        <strong>Formato:</strong> <span id="fileFormat">-</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">
                     <i class="fas fa-video"></i>
                     Controlli Camera
                 </div>
@@ -1349,6 +1415,24 @@
                     <i class="fas fa-cube"></i>
                 </div>
                 <div class="welcome-title">MarioPro</div>
+                <div class="welcome-upload">
+                    <div class="upload-zone-center" onclick="document.getElementById('fileInputCenter').click()">
+                        <div class="upload-icon-center">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text-center">
+                            <h3>Carica Modello 3D</h3>
+                            <p>Trascina file o tocca per selezionare</p>
+                            <div class="supported-formats-center">
+                                <span class="format-badge-center">OBJ</span>
+                                <span class="format-badge-center">GLTF</span>
+                                <span class="format-badge-center">GLB</span>
+                                <span class="format-badge-center">DAE</span>
+                            </div>
+                        </div>
+                        <input type="file" id="fileInputCenter" class="file-input" accept=".obj,.gltf,.glb,.dae">
+                    </div>
+                </div>
             </div>
             
             <div class="viewer-hud" id="viewerHUD" style="display: none;">
@@ -1799,83 +1883,129 @@
         function setupEventListeners() {
             const rotationSlider = document.getElementById('rotationSpeed');
             const rotationValue = document.getElementById('rotationValue');
-            rotationSlider.addEventListener('input', (e) => {
-                rotationSpeed = parseFloat(e.target.value);
-                rotationValue.textContent = rotationSpeed.toFixed(3);
-            });
+            if (rotationSlider && rotationValue) {
+                rotationSlider.addEventListener('input', (e) => {
+                    rotationSpeed = parseFloat(e.target.value);
+                    rotationValue.textContent = rotationSpeed.toFixed(3);
+                });
+            }
             
             const zoomSlider = document.getElementById('zoomControl');
             const zoomValue = document.getElementById('zoomValue');
-            zoomSlider.addEventListener('input', (e) => {
-                const scale = parseFloat(e.target.value);
-                const baseDistance = 10;
-                camera.position.normalize().multiplyScalar(baseDistance / scale);
-                zoomValue.textContent = scale.toFixed(1) + 'x';
-            });
+            if (zoomSlider && zoomValue) {
+                zoomSlider.addEventListener('input', (e) => {
+                    const scale = parseFloat(e.target.value);
+                    const baseDistance = 10;
+                    camera.position.normalize().multiplyScalar(baseDistance / scale);
+                    zoomValue.textContent = scale.toFixed(1) + 'x';
+                });
+            }
             
             const speedSlider = document.getElementById('cameraSpeed');
             const speedValue = document.getElementById('speedValue');
-            speedSlider.addEventListener('input', (e) => {
-                cameraSpeed = parseFloat(e.target.value);
-                speedValue.textContent = cameraSpeed.toFixed(1) + 'x';
-            });
+            if (speedSlider && speedValue) {
+                speedSlider.addEventListener('input', (e) => {
+                    cameraSpeed = parseFloat(e.target.value);
+                    speedValue.textContent = cameraSpeed.toFixed(1) + 'x';
+                });
+            }
             
             const lightSlider = document.getElementById('lightIntensity');
             const lightValue = document.getElementById('lightValue');
-            lightSlider.addEventListener('input', (e) => {
-                const intensity = parseFloat(e.target.value);
-                scene.traverse((child) => {
-                    if (child instanceof THREE.DirectionalLight || 
-                        child instanceof THREE.PointLight) {
-                        if (child !== scene.children.find(c => c instanceof THREE.AmbientLight)) {
-                            child.intensity = intensity;
+            if (lightSlider && lightValue) {
+                lightSlider.addEventListener('input', (e) => {
+                    const intensity = parseFloat(e.target.value);
+                    scene.traverse((child) => {
+                        if (child instanceof THREE.DirectionalLight || 
+                            child instanceof THREE.PointLight) {
+                            if (child !== scene.children.find(c => c instanceof THREE.AmbientLight)) {
+                                child.intensity = intensity;
+                            }
                         }
-                    }
+                    });
+                    lightValue.textContent = intensity.toFixed(1);
                 });
-                lightValue.textContent = intensity.toFixed(1);
-            });
+            }
             
             const ambientSlider = document.getElementById('ambientIntensity');
             const ambientValue = document.getElementById('ambientValue');
-            ambientSlider.addEventListener('input', (e) => {
-                const intensity = parseFloat(e.target.value);
-                scene.traverse((child) => {
-                    if (child instanceof THREE.AmbientLight) {
-                        child.intensity = intensity;
+            if (ambientSlider && ambientValue) {
+                ambientSlider.addEventListener('input', (e) => {
+                    const intensity = parseFloat(e.target.value);
+                    scene.traverse((child) => {
+                        if (child instanceof THREE.AmbientLight) {
+                            child.intensity = intensity;
+                        }
+                    });
+                    ambientValue.textContent = intensity.toFixed(1);
+                });
+            }
+            
+            const bgColor = document.getElementById('backgroundColor');
+            if (bgColor) {
+                bgColor.addEventListener('input', (e) => {
+                    const color = new THREE.Color(e.target.value);
+                    scene.background = color;
+                });
+            }
+            
+            // Solo file input centrale per welcome screen
+            const fileInputCenter = document.getElementById('fileInputCenter');
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const uploadZoneCenter = welcomeScreen?.querySelector('.upload-zone-center');
+            
+            if (fileInputCenter) {
+                fileInputCenter.addEventListener('change', handleFileUpload);
+                
+                // Drag & drop eventi per upload zone centrale
+                if (uploadZoneCenter) {
+                    uploadZoneCenter.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZoneCenter.classList.add('dragover');
+                    });
+                    
+                    uploadZoneCenter.addEventListener('dragleave', (e) => {
+                        e.preventDefault();
+                        uploadZoneCenter.classList.remove('dragover');
+                    });
+                    
+                    uploadZoneCenter.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZoneCenter.classList.remove('dragover');
+                        
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            handleFileUpload({ target: { files: files } });
+                        }
+                    });
+                }
+            }
+            
+            // Drag & drop globale per tutto il viewer
+            const viewer = document.getElementById('viewer');
+            if (viewer) {
+                viewer.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (welcomeScreen && welcomeScreen.style.display !== 'none') {
+                        if (uploadZoneCenter) uploadZoneCenter.classList.add('dragover');
                     }
                 });
-                ambientValue.textContent = intensity.toFixed(1);
-            });
-            
-            document.getElementById('backgroundColor').addEventListener('input', (e) => {
-                const color = new THREE.Color(e.target.value);
-                scene.background = color;
-            });
-            
-            const fileInput = document.getElementById('fileInput');
-            const uploadZone = document.getElementById('uploadZone');
-            
-            fileInput.addEventListener('change', handleFileUpload);
-            
-            uploadZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadZone.classList.add('dragover');
-            });
-            
-            uploadZone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                uploadZone.classList.remove('dragover');
-            });
-            
-            uploadZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadZone.classList.remove('dragover');
                 
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFileUpload({ target: { files: files } });
-                }
-            });
+                viewer.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    if (uploadZoneCenter) uploadZoneCenter.classList.remove('dragover');
+                });
+                
+                viewer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (uploadZoneCenter) uploadZoneCenter.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFileUpload({ target: { files: files } });
+                    }
+                });
+            }
             
             window.addEventListener('resize', onWindowResize);
             document.addEventListener('keydown', handleKeyboard);
@@ -2269,20 +2399,11 @@
         }
         
         function showFileInfo(file) {
-            const fileInfo = document.getElementById('fileInfo');
-            const fileName = document.getElementById('fileName');
-            const fileSize = document.getElementById('fileSize');
-            const fileType = document.getElementById('fileType');
-            const fileFormat = document.getElementById('fileFormat');
-            
+            // Mostra info file come notifica invece di area dedicata
             const extension = file.name.toLowerCase().split('.').pop();
+            const size = formatFileSize(file.size);
             
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            fileType.textContent = file.type || 'application/octet-stream';
-            fileFormat.textContent = extension.toUpperCase();
-            
-            fileInfo.classList.add('show');
+            showNotification(`📁 ${file.name} (${size}, ${extension.toUpperCase()})`, 'info');
         }
         
         function formatFileSize(bytes) {
