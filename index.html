@@ -2,31 +2,252 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>3D Viewer Pro</title>
+    <title>3D Viewer Pro - Working Edition</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; overflow: hidden; height: 100vh; }
-        .container { display: flex; height: 100vh; }
-        .sidebar { width: 300px; background: #2d2d2d; border-right: 1px solid #444; display: flex; flex-direction: column; overflow-y: auto; }
-        .header { padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .logo { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .section { padding: 15px; border-bottom: 1px solid #444; }
-        .section h3 { font-size: 12px; color: #4fc3f7; margin-bottom: 10px; text-transform: uppercase; }
-        .upload-btn { width: 100%; padding: 10px; background: #4fc3f7; border: none; border-radius: 6px; color: white; cursor: pointer; margin-bottom: 10px; }
-        .sample-btn { padding: 8px 12px; background: #444; border: 1px solid #666; border-radius: 4px; color: #ccc; cursor: pointer; margin: 2px; font-size: 11px; }
-        .sample-btn:hover { background: #555; }
-        .viewer { flex: 1; position: relative; background: #222; }
-        #canvas { width: 100%; height: 100%; }
-        .toolbar { position: absolute; top: 20px; right: 20px; background: rgba(45,45,45,0.9); border-radius: 8px; padding: 8px; display: flex; gap: 5px; }
-        .tool-btn { width: 36px; height: 36px; background: transparent; border: none; color: #ccc; cursor: pointer; border-radius: 4px; }
-        .tool-btn:hover { background: #555; color: white; }
-        .info { background: #333; padding: 10px; margin: 5px 0; border-radius: 4px; font-size: 11px; }
-        .notification { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 10px 15px; border-radius: 6px; transform: translateX(300px); transition: transform 0.3s; z-index: 1000; }
-        .notification.show { transform: translateX(0); }
-        .notification.success { border-left: 3px solid #4caf50; }
-        .notification.error { border-left: 3px solid #f44336; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #2d2d2d;
+            border-right: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-bottom: 1px solid #444;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .section h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            font-weight: 600;
+        }
+        
+        .upload-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .sample-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #555;
+            border-radius: 6px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .sample-btn:hover {
+            background: #404040;
+        }
+        
+        .viewer {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 10px;
+            gap: 6px;
+            z-index: 100;
+        }
+        
+        .tool-btn {
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .tool-btn:hover {
+            background: #555;
+            color: white;
+        }
+        
+        .nav-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 12px;
+            gap: 12px;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .nav-btn:hover {
+            background: #4fc3f7;
+            color: white;
+        }
+        
+        .view-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .view-btn {
+            padding: 10px;
+            background: #404040;
+            border: none;
+            border-radius: 6px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .view-btn:hover {
+            background: #4a4a4a;
+        }
+        
+        .view-btn.active {
+            background: #4fc3f7;
+            color: white;
+        }
+        
+        .info-card {
+            background: #383838;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 16px;
+        }
+        
+        .info-card h4 {
+            font-size: 12px;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .info-label { 
+            color: #aaa; 
+        }
+        
+        .info-value { 
+            color: white; 
+            font-weight: 500; 
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(45, 45, 45, 0.98);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4fc3f7;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left-color: #4caf50;
+        }
+        
+        .notification.error {
+            border-left-color: #f44336;
+        }
     </style>
 </head>
 <body>
@@ -34,368 +255,527 @@
         <div class="sidebar">
             <div class="header">
                 <div class="logo">3D Viewer Pro</div>
-                <div style="font-size: 12px; opacity: 0.8;">Carica file OBJ e DAE</div>
+                <div class="subtitle">Working Edition</div>
             </div>
             
             <div class="section">
                 <h3>File Manager</h3>
-                <input type="file" id="fileInput" accept=".obj,.dae" style="display: none;">
+                <input type="file" id="fileInput" accept=".obj,.glb,.gltf" style="display: none;">
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                    Carica File 3D
+                    Carica Modello 3D
                 </button>
-                <div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="sample-btn" onclick="loadSample('house')">Casa</button>
                     <button class="sample-btn" onclick="loadSample('cube')">Cubo</button>
                     <button class="sample-btn" onclick="loadSample('sphere')">Sfera</button>
-                    <button class="sample-btn" onclick="loadSample('house')">Casa</button>
                 </div>
             </div>
             
             <div class="section">
-                <h3>Informazioni</h3>
-                <div class="info">
-                    <div>File: <span id="fileName">Nessuno</span></div>
-                    <div>FPS: <span id="fps">60</span></div>
-                    <div>Vertici: <span id="vertices">0</span></div>
+                <h3>Visualizzazione</h3>
+                <div class="view-grid">
+                    <button class="view-btn active" onclick="setViewMode('solid')">Solido</button>
+                    <button class="view-btn" onclick="setViewMode('wireframe')">Wireframe</button>
                 </div>
             </div>
             
             <div class="section">
-                <h3>Controlli</h3>
-                <div style="font-size: 10px; color: #aaa; line-height: 1.4;">
-                    Mouse: Ruota modello<br>
-                    Scroll: Zoom<br>
-                    Drag: Ruota camera
+                <h3>Statistiche</h3>
+                <div class="info-card">
+                    <h4>Modello</h4>
+                    <div class="info-row">
+                        <span class="info-label">File:</span>
+                        <span class="info-value" id="fileName">Nessuno</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">FPS:</span>
+                        <span class="info-value" id="fpsDisplay">60</span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h4>Controlli</h4>
+                    <div style="font-size: 10px; color: #aaa; line-height: 1.4;">
+                        Mouse: Ruota modello<br>
+                        Scroll: Zoom<br>
+                        Pulsanti: Cambia vista
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="viewer">
             <div class="toolbar">
-                <button class="tool-btn" onclick="resetView()" title="Reset">🏠</button>
-                <button class="tool-btn" onclick="takeScreenshot()" title="Screenshot">📷</button>
-                <button class="tool-btn" onclick="toggleWireframe()" title="Wireframe">📐</button>
+                <button class="tool-btn" onclick="takeScreenshot()">📸</button>
+                <button class="tool-btn" onclick="resetView()">🏠</button>
             </div>
+            
             <div id="canvas"></div>
+            
+            <div class="nav-controls">
+                <button class="nav-btn" onclick="setView('front')">↑</button>
+                <button class="nav-btn" onclick="setView('back')">↓</button>
+                <button class="nav-btn" onclick="setView('left')">←</button>
+                <button class="nav-btn" onclick="setView('right')">→</button>
+                <button class="nav-btn" onclick="setView('top')">⊙</button>
+                <button class="nav-btn" onclick="setView('iso')">⬢</button>
+            </div>
         </div>
     </div>
 
-<script>
-let scene, camera, renderer, currentModel;
-let isMouseDown = false, mouseX = 0, mouseY = 0;
-let rotX = 0, rotY = 0, targetRotX = 0, targetRotY = 0;
-let wireframe = false;
+    <script>
+        let scene, camera, renderer, currentModel;
+        let mouseDown = false, mouseX = 0, mouseY = 0;
+        let rotationX = 0, rotationY = 0;
+        let targetRotX = 0, targetRotY = 0;
+        let frameCount = 0, lastTime = Date.now();
 
-function init() {
-    const canvas = document.getElementById('canvas');
-    
-    if (typeof THREE === 'undefined') {
-        canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Three.js non caricato</div>';
-        return;
-    }
+        function init() {
+            const canvas = document.getElementById('canvas');
+            
+            // Controlla se Three.js è caricato
+            if (typeof THREE === 'undefined') {
+                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Errore: Three.js non caricato</div>';
+                return;
+            }
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x222222);
+            try {
+                // Scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x222222);
 
-    camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    camera.position.set(5, 5, 5);
+                // Camera
+                camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+                camera.position.set(5, 5, 5);
+                camera.lookAt(0, 0, 0);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.shadowMap.enabled = true;
-    canvas.appendChild(renderer.domElement);
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
+                canvas.appendChild(renderer.domElement);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(10, 10, 5);
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
+                // Lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
 
-    const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(20, 20),
-        new THREE.MeshLambertMaterial({ color: 0x333333 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
 
-    setupControls();
-    loadSample('cube');
-    animate();
-    
-    window.addEventListener('resize', handleResize);
-    showNotification('3D Viewer inizializzato', 'success');
-}
+                // Ground
+                const groundGeometry = new THREE.PlaneGeometry(20, 20);
+                const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                scene.add(ground);
 
-function setupControls() {
-    const canvas = renderer.domElement;
+                // Load default model
+                loadSample('cube');
 
-    canvas.addEventListener('mousedown', (e) => {
-        isMouseDown = true;
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
+                // Mouse controls
+                setupControls();
 
-    canvas.addEventListener('mousemove', (e) => {
-        if (!isMouseDown) return;
-        const deltaX = e.clientX - mouseX;
-        const deltaY = e.clientY - mouseY;
-        targetRotY += deltaX * 0.01;
-        targetRotX += deltaY * 0.01;
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
+                // Start render loop
+                animate();
 
-    canvas.addEventListener('mouseup', () => { isMouseDown = false; });
+                // Handle resize
+                window.addEventListener('resize', handleResize);
 
-    canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const zoom = e.deltaY * 0.001;
-        camera.position.multiplyScalar(1 + zoom);
-        const distance = camera.position.length();
-        if (distance < 2) camera.position.normalize().multiplyScalar(2);
-        if (distance > 50) camera.position.normalize().multiplyScalar(50);
-    });
-}
+                showNotification('3D Viewer caricato con successo!', 'success');
 
-function animate() {
-    requestAnimationFrame(animate);
+            } catch (error) {
+                console.error('Errore inizializzazione 3D:', error);
+                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Errore WebGL</div>';
+            }
+        }
 
-    rotX += (targetRotX - rotX) * 0.1;
-    rotY += (targetRotY - rotY) * 0.1;
+        function setupControls() {
+            const canvas = renderer.domElement;
 
-    if (currentModel) {
-        currentModel.rotation.x = rotX;
-        currentModel.rotation.y = rotY;
-    }
-
-    renderer.render(scene, camera);
-}
-
-function loadSample(type) {
-    if (currentModel) scene.remove(currentModel);
-
-    let geometry, material;
-    material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7, wireframe: wireframe });
-
-    switch (type) {
-        case 'cube':
-            geometry = new THREE.BoxGeometry(2, 2, 2);
-            currentModel = new THREE.Mesh(geometry, material);
-            currentModel.position.y = 1;
-            document.getElementById('fileName').textContent = 'Cubo.obj';
-            break;
-        case 'sphere':
-            geometry = new THREE.SphereGeometry(1.5, 32, 32);
-            currentModel = new THREE.Mesh(geometry, material);
-            currentModel.position.y = 1.5;
-            document.getElementById('fileName').textContent = 'Sfera.obj';
-            break;
-        case 'house':
-            currentModel = new THREE.Group();
-            const base = new THREE.Mesh(new THREE.BoxGeometry(3, 2, 3), new THREE.MeshLambertMaterial({ color: 0xffa500, wireframe: wireframe }));
-            base.position.y = 1;
-            currentModel.add(base);
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.5, 4), new THREE.MeshLambertMaterial({ color: 0x8b4513, wireframe: wireframe }));
-            roof.position.y = 2.75;
-            currentModel.add(roof);
-            document.getElementById('fileName').textContent = 'Casa.obj';
-            break;
-    }
-
-    currentModel.castShadow = true;
-    scene.add(currentModel);
-    document.getElementById('vertices').textContent = geometry ? geometry.attributes.position.count : 'N/A';
-    resetView();
-    showNotification('Modello ' + type + ' caricato', 'success');
-}
-
-function resetView() {
-    camera.position.set(5, 5, 5);
-    camera.lookAt(0, 1, 0);
-    targetRotX = 0;
-    targetRotY = 0;
-}
-
-function takeScreenshot() {
-    const link = document.createElement('a');
-    link.download = '3d-screenshot-' + Date.now() + '.png';
-    link.href = renderer.domElement.toDataURL();
-    link.click();
-    showNotification('Screenshot salvato', 'success');
-}
-
-function toggleWireframe() {
-    wireframe = !wireframe;
-    if (currentModel) {
-        if (currentModel.traverse) {
-            currentModel.traverse(child => {
-                if (child.isMesh) child.material.wireframe = wireframe;
+            canvas.addEventListener('mousedown', (e) => {
+                mouseDown = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
             });
-        } else {
-            currentModel.material.wireframe = wireframe;
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!mouseDown) return;
+
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+
+                targetRotY += deltaX * 0.01;
+                targetRotX += deltaY * 0.01;
+
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                mouseDown = false;
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoom = e.deltaY * 0.001;
+                camera.position.multiplyScalar(1 + zoom);
+                const distance = camera.position.length();
+                if (distance < 2) camera.position.normalize().multiplyScalar(2);
+                if (distance > 50) camera.position.normalize().multiplyScalar(50);
+            });
         }
-    }
-    showNotification('Wireframe ' + (wireframe ? 'attivo' : 'disattivo'), 'success');
-}
 
-function handleResize() {
-    const canvas = document.getElementById('canvas');
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-}
+        function animate() {
+            requestAnimationFrame(animate);
 
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = 'notification ' + type;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 100);
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 2500);
-}
+            // Smooth rotation
+            rotationX += (targetRotX - rotationX) * 0.1;
+            rotationY += (targetRotY - rotationY) * 0.1;
 
-// File loading
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        loadFile(file);
-    }
-});
+            if (currentModel) {
+                currentModel.rotation.x = rotationX;
+                currentModel.rotation.y = rotationY;
+            }
 
-function loadFile(file) {
-    const fileName = file.name.toLowerCase();
-    
-    if (fileName.endsWith('.obj')) {
-        loadOBJ(file);
-    } else if (fileName.endsWith('.dae')) {
-        loadDAE(file);
-    } else {
-        showNotification('Formato non supportato', 'error');
-    }
-}
+            renderer.render(scene, camera);
 
-function loadOBJ(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const geometry = parseOBJ(e.target.result);
-            setModel(geometry, file.name);
-            showNotification('File OBJ caricato', 'success');
-        } catch (error) {
-            showNotification('Errore caricamento OBJ', 'error');
+            // FPS counter
+            frameCount++;
+            const now = Date.now();
+            if (now > lastTime + 1000) {
+                const fps = Math.round((frameCount * 1000) / (now - lastTime));
+                document.getElementById('fpsDisplay').textContent = fps;
+                frameCount = 0;
+                lastTime = now;
+            }
         }
-    };
-    reader.readAsText(file);
-}
 
-function loadDAE(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const geometry = parseDAE(e.target.result);
-            setModel(geometry, file.name);
-            showNotification('File DAE caricato', 'success');
-        } catch (error) {
-            showNotification('Errore caricamento DAE', 'error');
+        function loadSample(type) {
+            if (currentModel) {
+                scene.remove(currentModel);
+            }
+
+            let geometry, material;
+
+            switch (type) {
+                case 'house':
+                    currentModel = new THREE.Group();
+                    
+                    // Base
+                    const base = new THREE.Mesh(
+                        new THREE.BoxGeometry(3, 2, 3),
+                        new THREE.MeshLambertMaterial({ color: 0xffa500 })
+                    );
+                    base.position.y = 1;
+                    base.castShadow = true;
+                    currentModel.add(base);
+                    
+                    // Roof
+                    const roof = new THREE.Mesh(
+                        new THREE.ConeGeometry(2.2, 1.5, 4),
+                        new THREE.MeshLambertMaterial({ color: 0x8b4513 })
+                    );
+                    roof.position.y = 2.75;
+                    roof.rotation.y = Math.PI / 4;
+                    roof.castShadow = true;
+                    currentModel.add(roof);
+                    
+                    document.getElementById('fileName').textContent = 'Casa_3D.obj';
+                    break;
+
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+                    material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7 });
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.position.y = 1;
+                    currentModel.castShadow = true;
+                    document.getElementById('fileName').textContent = 'Cubo.obj';
+                    break;
+
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1.5, 32, 32);
+                    material = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.position.y = 1.5;
+                    currentModel.castShadow = true;
+                    document.getElementById('fileName').textContent = 'Sfera.obj';
+                    break;
+            }
+
+            scene.add(currentModel);
+            resetView();
+            showNotification('Modello ' + type + ' caricato!', 'success');
         }
-    };
-    reader.readAsText(file);
-}
 
-function parseOBJ(data) {
-    const vertices = [];
-    const faces = [];
-    const lines = data.split('\n');
-    
-    for (const line of lines) {
-        const parts = line.trim().split(/\s+/);
-        
-        if (parts[0] === 'v') {
-            vertices.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
-        } else if (parts[0] === 'f') {
-            const indices = parts.slice(1).map(p => parseInt(p.split('/')[0]) - 1);
-            if (indices.length >= 3) {
-                for (let i = 1; i < indices.length - 1; i++) {
-                    faces.push(indices[0], indices[i], indices[i + 1]);
+        function setViewMode(mode) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (!currentModel) return;
+
+            if (currentModel.traverse) {
+                currentModel.traverse((child) => {
+                    if (child.isMesh) {
+                        if (mode === 'wireframe') {
+                            child.material.wireframe = true;
+                        } else {
+                            child.material.wireframe = false;
+                        }
+                    }
+                });
+            } else {
+                if (mode === 'wireframe') {
+                    currentModel.material.wireframe = true;
+                } else {
+                    currentModel.material.wireframe = false;
                 }
             }
-        }
-    }
-    
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setIndex(faces);
-    geometry.computeVertexNormals();
-    return geometry;
-}
 
-function parseDAE(data) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(data, 'text/xml');
-    const vertices = [];
-    const faces = [];
-    
-    const sources = xmlDoc.getElementsByTagName('source');
-    for (const source of sources) {
-        const floatArray = source.getElementsByTagName('float_array')[0];
-        if (floatArray) {
-            const values = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
-            for (let i = 0; i < values.length; i += 3) {
-                vertices.push(values[i], values[i + 1], values[i + 2]);
+            showNotification('Modalità: ' + mode, 'success');
+        }
+
+        function setView(view) {
+            if (!currentModel) return;
+
+            const distance = 8;
+
+            switch (view) {
+                case 'front':
+                    camera.position.set(0, 2, distance);
+                    break;
+                case 'back':
+                    camera.position.set(0, 2, -distance);
+                    break;
+                case 'left':
+                    camera.position.set(-distance, 2, 0);
+                    break;
+                case 'right':
+                    camera.position.set(distance, 2, 0);
+                    break;
+                case 'top':
+                    camera.position.set(0, distance, 0);
+                    break;
+                case 'iso':
+                    camera.position.set(distance, distance, distance);
+                    break;
             }
-            break;
+
+            camera.lookAt(0, 1, 0);
+            targetRotX = 0;
+            targetRotY = 0;
+            showNotification('Vista: ' + view, 'success');
         }
-    }
-    
-    const triangles = xmlDoc.getElementsByTagName('triangles')[0];
-    if (triangles) {
-        const p = triangles.getElementsByTagName('p')[0];
-        if (p) {
-            const indices = p.textContent.trim().split(/\s+/).map(parseInt);
-            for (let i = 0; i < indices.length; i += 3) {
-                faces.push(indices[i], indices[i + 1], indices[i + 2]);
+
+        function resetView() {
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 1, 0);
+            targetRotX = 0;
+            targetRotY = 0;
+            showNotification('Vista ripristinata', 'success');
+        }
+
+        function takeScreenshot() {
+            if (!renderer) return;
+
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+
+            const link = document.createElement('a');
+            link.download = '3d-screenshot-' + Date.now() + '.png';
+            link.href = dataURL;
+            link.click();
+
+            showNotification('Screenshot salvato!', 'success');
+        }
+
+        function handleResize() {
+            const canvas = document.getElementById('canvas');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'notification ' + type;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // File upload handler with OBJ parser
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                loadOBJFile(file);
             }
+        });
+
+        function loadOBJFile(file) {
+            const fileName = file.name.toLowerCase();
+            
+            if (!fileName.endsWith('.obj')) {
+                showNotification('Formato non supportato. Usa file .obj', 'error');
+                return;
+            }
+
+            showNotification('Caricamento ' + file.name + '...', 'success');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const objData = e.target.result;
+                    const geometry = parseOBJ(objData);
+                    
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    const material = new THREE.MeshLambertMaterial({ 
+                        color: 0x4fc3f7,
+                        side: THREE.DoubleSide 
+                    });
+                    
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.castShadow = true;
+                    currentModel.receiveShadow = true;
+                    
+                    // Center the model
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    currentModel.position.sub(center);
+                    
+                    // Scale if too big
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 10) {
+                        const scale = 10 / maxDim;
+                        currentModel.scale.set(scale, scale, scale);
+                    }
+                    
+                    scene.add(currentModel);
+                    
+                    document.getElementById('fileName').textContent = file.name;
+                    resetView();
+                    showNotification('File OBJ caricato con successo!', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore parsing OBJ:', error);
+                    showNotification('Errore nel caricamento del file OBJ', 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Errore nella lettura del file', 'error');
+            };
+            
+            reader.readAsText(file);
         }
-    }
-    
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setIndex(faces);
-    geometry.computeVertexNormals();
-    return geometry;
-}
 
-function setModel(geometry, fileName) {
-    if (currentModel) scene.remove(currentModel);
-    
-    const material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7, wireframe: wireframe, side: THREE.DoubleSide });
-    currentModel = new THREE.Mesh(geometry, material);
-    currentModel.castShadow = true;
-    
-    const box = new THREE.Box3().setFromObject(currentModel);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    
-    currentModel.position.copy(center).negate();
-    currentModel.position.y = size.y / 2;
-    
-    const maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim > 10) {
-        const scale = 10 / maxDim;
-        currentModel.scale.setScalar(scale);
-    }
-    
-    scene.add(currentModel);
-    document.getElementById('fileName').textContent = fileName;
-    document.getElementById('vertices').textContent = geometry.attributes.position.count;
-    resetView();
-}
+        function parseOBJ(data) {
+            const vertices = [];
+            const faces = [];
+            const normals = [];
+            const uvs = [];
+            
+            const lines = data.split('\n');
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.startsWith('v ')) {
+                    // Vertex
+                    const parts = line.split(/\s+/);
+                    vertices.push(
+                        parseFloat(parts[1]),
+                        parseFloat(parts[2]),
+                        parseFloat(parts[3])
+                    );
+                } else if (line.startsWith('vn ')) {
+                    // Normal
+                    const parts = line.split(/\s+/);
+                    normals.push(
+                        parseFloat(parts[1]),
+                        parseFloat(parts[2]),
+                        parseFloat(parts[3])
+                    );
+                } else if (line.startsWith('vt ')) {
+                    // UV
+                    const parts = line.split(/\s+/);
+                    uvs.push(
+                        parseFloat(parts[1]),
+                        parseFloat(parts[2])
+                    );
+                } else if (line.startsWith('f ')) {
+                    // Face
+                    const parts = line.split(/\s+/);
+                    parts.shift(); // Remove 'f'
+                    
+                    // Convert to triangles if needed
+                    if (parts.length === 3) {
+                        // Already a triangle
+                        for (let j = 0; j < 3; j++) {
+                            const vertexData = parts[j].split('/');
+                            faces.push(parseInt(vertexData[0]) - 1); // OBJ is 1-indexed
+                        }
+                    } else if (parts.length === 4) {
+                        // Quad - convert to two triangles
+                        const indices = [];
+                        for (let j = 0; j < 4; j++) {
+                            const vertexData = parts[j].split('/');
+                            indices.push(parseInt(vertexData[0]) - 1);
+                        }
+                        
+                        // Triangle 1: 0,1,2
+                        faces.push(indices[0], indices[1], indices[2]);
+                        // Triangle 2: 0,2,3
+                        faces.push(indices[0], indices[2], indices[3]);
+                    }
+                }
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            
+            if (vertices.length > 0) {
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            }
+            
+            if (faces.length > 0) {
+                geometry.setIndex(faces);
+            }
+            
+            // Compute normals if not provided
+            if (normals.length === 0) {
+                geometry.computeVertexNormals();
+            } else {
+                geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            }
+            
+            // Center geometry
+            geometry.center();
+            
+            return geometry;
+        }
 
-document.addEventListener('DOMContentLoaded', init);
-</script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(init, 100);
+        });
+    </script>
 </body>
 </html>
