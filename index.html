@@ -260,7 +260,7 @@
             
             <div class="section">
                 <h3>File Manager</h3>
-                <input type="file" id="fileInput" accept=".obj,.glb,.gltf" style="display: none;">
+                <input type="file" id="fileInput" accept=".obj,.glb,.gltf,.dae" style="display: none;">
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                     Carica Modello 3D
                 </button>
@@ -618,13 +618,224 @@
             }, 3000);
         }
 
-        // File upload handler with OBJ parser
+        // File upload handler with OBJ and DAE parser
         document.getElementById('fileInput').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
-                loadOBJFile(file);
+                const fileName = file.name.toLowerCase();
+                
+                if (fileName.endsWith('.obj')) {
+                    loadOBJFile(file);
+                } else if (fileName.endsWith('.dae')) {
+                    loadDAEFile(file);
+                } else {
+                    showNotification('Formato non supportato. Usa file .obj o .dae', 'error');
+                }
             }
         });
+
+        function loadDAEFile(file) {
+            showNotification('Caricamento file DAE ' + file.name + '...', 'success');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const daeData = e.target.result;
+                    console.log('DAE file size:', daeData.length, 'characters');
+                    
+                    const geometry = parseDAE(daeData);
+                    
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    const material = new THREE.MeshLambertMaterial({ 
+                        color: 0x4fc3f7,
+                        side: THREE.DoubleSide 
+                    });
+                    
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.castShadow = true;
+                    currentModel.receiveShadow = true;
+                    
+                    scene.add(currentModel);
+                    
+                    // Auto-fit and center
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    // Center the model
+                    currentModel.position.copy(center).negate();
+                    
+                    // Scale if necessary
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 20) {
+                        const scale = 20 / maxDim;
+                        currentModel.scale.setScalar(scale);
+                    }
+                    
+                    // Position above ground
+                    currentModel.position.y = Math.max(0, size.y / 2);
+                    
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    // Reset camera to show the model
+                    const distance = Math.max(maxDim * 1.5, 10);
+                    camera.position.set(distance, distance * 0.7, distance);
+                    camera.lookAt(0, size.y / 2, 0);
+                    
+                    targetRotX = 0;
+                    targetRotY = 0;
+                    
+                    showNotification('File DAE caricato: ' + geometry.attributes.position.count + ' vertici', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore parsing DAE:', error);
+                    showNotification('Errore nel caricamento: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Errore nella lettura del file DAE', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function parseDAE(data) {
+            console.log('Parsing DAE file...');
+            
+            // Parse XML
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data, "text/xml");
+            
+            // Check for parsing errors
+            const parseError = xmlDoc.getElementsByTagName("parsererror");
+            if (parseError.length > 0) {
+                throw new Error('Errore parsing XML DAE');
+            }
+            
+            const vertices = [];
+            const faces = [];
+            
+            // Find geometry data
+            const geometries = xmlDoc.getElementsByTagName('geometry');
+            console.log('Found', geometries.length, 'geometries');
+            
+            if (geometries.length === 0) {
+                throw new Error('Nessuna geometria trovata nel file DAE');
+            }
+            
+            for (let g = 0; g < geometries.length; g++) {
+                const geometry = geometries[g];
+                const mesh = geometry.getElementsByTagName('mesh')[0];
+                
+                if (!mesh) continue;
+                
+                // Get vertex positions
+                const sources = mesh.getElementsByTagName('source');
+                let positionSource = null;
+                
+                for (let s = 0; s < sources.length; s++) {
+                    const source = sources[s];
+                    const accessor = source.getElementsByTagName('accessor')[0];
+                    
+                    if (accessor) {
+                        const params = accessor.getElementsByTagName('param');
+                        // Look for position data (X, Y, Z parameters)
+                        if (params.length >= 3 && 
+                            params[0].getAttribute('name') === 'X' &&
+                            params[1].getAttribute('name') === 'Y' &&
+                            params[2].getAttribute('name') === 'Z') {
+                            positionSource = source;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!positionSource) {
+                    // Fallback: use first source with float array
+                    for (let s = 0; s < sources.length; s++) {
+                        if (sources[s].getElementsByTagName('float_array').length > 0) {
+                            positionSource = sources[s];
+                            break;
+                        }
+                    }
+                }
+                
+                if (positionSource) {
+                    const floatArray = positionSource.getElementsByTagName('float_array')[0];
+                    if (floatArray) {
+                        const positionData = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
+                        console.log('Found', positionData.length / 3, 'vertices');
+                        
+                        // Add vertices (assuming XYZ format)
+                        for (let i = 0; i < positionData.length; i += 3) {
+                            if (i + 2 < positionData.length) {
+                                vertices.push(
+                                    positionData[i] || 0,
+                                    positionData[i + 1] || 0,
+                                    positionData[i + 2] || 0
+                                );
+                            }
+                        }
+                    }
+                }
+                
+                // Get face indices
+                const triangles = mesh.getElementsByTagName('triangles')[0] || 
+                                mesh.getElementsByTagName('polylist')[0] ||
+                                mesh.getElementsByTagName('polygons')[0];
+                
+                if (triangles) {
+                    const pElement = triangles.getElementsByTagName('p')[0];
+                    if (pElement) {
+                        const indices = pElement.textContent.trim().split(/\s+/).map(parseInt);
+                        console.log('Found', indices.length / 3, 'face indices');
+                        
+                        // Simple triangulation (assumes triangles or converts everything to triangles)
+                        const inputCount = triangles.getElementsByTagName('input').length || 1;
+                        
+                        for (let i = 0; i < indices.length; i += 3 * inputCount) {
+                            if (i + (3 * inputCount) <= indices.length) {
+                                faces.push(
+                                    indices[i],
+                                    indices[i + inputCount], 
+                                    indices[i + 2 * inputCount]
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            
+            console.log('Parsed DAE:', vertices.length / 3, 'vertices,', faces.length / 3, 'triangles');
+            
+            if (vertices.length === 0) {
+                throw new Error('Nessun vertice trovato nel file DAE');
+            }
+            
+            // Create Three.js geometry
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            if (faces.length > 0) {
+                geometry.setIndex(faces);
+            } else {
+                // If no faces, create them based on vertex order
+                const autoFaces = [];
+                for (let i = 0; i < vertices.length / 3; i += 3) {
+                    autoFaces.push(i, i + 1, i + 2);
+                }
+                geometry.setIndex(autoFaces);
+            }
+            
+            geometry.computeVertexNormals();
+            geometry.computeBoundingBox();
+            
+            return geometry;
+        }
 
         function loadOBJFile(file) {
             const fileName = file.name.toLowerCase();
