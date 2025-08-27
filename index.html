@@ -2,819 +2,407 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <title>3D Viewer Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarioPro - Visualizzatore 3D</title>
-    
-    <!-- Three.js CDN stabile -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Loader per formati 3D -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            overflow: hidden;
-            height: 100vh;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .app-container {
-            display: flex;
-            height: 100vh;
-        }
-        
-        .sidebar {
-            width: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            overflow-y: auto;
-            color: white;
-        }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-        }
-        
-        .logo h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .logo p {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        
-        .section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        
-        .upload-zone {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .upload-zone:hover {
-            border-color: rgba(255, 255, 255, 0.8);
-            transform: scale(1.02);
-        }
-        
-        .upload-zone h3 {
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        
-        .file-input {
-            display: none;
-        }
-        
-        .supported-formats {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        
-        .format-badge {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-        
-        .control-group {
-            margin-bottom: 15px;
-        }
-        
-        .control-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        
-        .control-input {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        .control-input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            cursor: pointer;
-        }
-        
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 5px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .viewer-container {
-            flex: 1;
-            position: relative;
-            margin: 10px;
-            border-radius: 20px;
-            overflow: hidden;
-            background: #2d3748;
-        }
-        
-        #viewer {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .welcome-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            z-index: 10;
-            width: 90%;
-            max-width: 400px;
-        }
-        
-        .welcome-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .welcome-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        
-        .upload-zone-center {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            padding: 30px 20px;
-            cursor: pointer;
-            border: 3px dashed rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .upload-zone-center:hover {
-            border-color: rgba(255, 255, 255, 0.8);
-            transform: scale(1.05);
-        }
-        
-        .upload-text-center h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-        
-        .upload-text-center p {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 15px;
-        }
-        
-        .loading-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 100;
-            flex-direction: column;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            z-index: 10000;
-            max-width: 300px;
-        }
-        
-        .notification-success { background: #4CAF50; }
-        .notification-error { background: #f44336; }
-        .notification-info { background: #2196F3; }
-        
-        /* Mobile */
-        @media (max-width: 768px) {
-            .app-container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: fixed;
-                bottom: -50%;
-                transition: bottom 0.3s ease;
-                z-index: 1000;
-                border-radius: 20px 20px 0 0;
-            }
-            
-            .sidebar.open {
-                bottom: 0;
-            }
-            
-            .viewer-container {
-                margin: 0;
-                border-radius: 0;
-            }
-            
-            .mobile-menu-btn {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #667eea;
-                color: white;
-                border: none;
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                font-size: 20px;
-                cursor: pointer;
-                z-index: 1001;
-                display: block;
-            }
-            
-            .welcome-screen {
-                width: 95%;
-            }
-            
-            .welcome-title {
-                font-size: 28px;
-            }
-            
-            .upload-zone-center {
-                padding: 20px 15px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; overflow: hidden; height: 100vh; }
+        .container { display: flex; height: 100vh; }
+        .sidebar { width: 300px; background: #2d2d2d; border-right: 1px solid #444; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .logo { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .section { padding: 15px; border-bottom: 1px solid #444; }
+        .section h3 { font-size: 12px; color: #4fc3f7; margin-bottom: 10px; text-transform: uppercase; }
+        .upload-btn { width: 100%; padding: 10px; background: #4fc3f7; border: none; border-radius: 6px; color: white; cursor: pointer; margin-bottom: 10px; }
+        .sample-btn { padding: 8px 12px; background: #444; border: 1px solid #666; border-radius: 4px; color: #ccc; cursor: pointer; margin: 2px; font-size: 11px; }
+        .sample-btn:hover { background: #555; }
+        .viewer { flex: 1; position: relative; background: #222; }
+        #canvas { width: 100%; height: 100%; }
+        .toolbar { position: absolute; top: 20px; right: 20px; background: rgba(45,45,45,0.9); border-radius: 8px; padding: 8px; display: flex; gap: 5px; }
+        .tool-btn { width: 36px; height: 36px; background: transparent; border: none; color: #ccc; cursor: pointer; border-radius: 4px; }
+        .tool-btn:hover { background: #555; color: white; }
+        .info { background: #333; padding: 10px; margin: 5px 0; border-radius: 4px; font-size: 11px; }
+        .notification { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 10px 15px; border-radius: 6px; transform: translateX(300px); transition: transform 0.3s; z-index: 1000; }
+        .notification.show { transform: translateX(0); }
+        .notification.success { border-left: 3px solid #4caf50; }
+        .notification.error { border-left: 3px solid #f44336; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" onclick="toggleSidebar()" id="mobileMenuBtn" style="display: none;">
-            ☰
-        </button>
-        
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="logo">
-                <h1>🧊 MarioPro</h1>
-                <p>Visualizzatore 3D</p>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <div class="logo">3D Viewer Pro</div>
+                <div style="font-size: 12px; opacity: 0.8;">Carica file OBJ e DAE</div>
             </div>
             
             <div class="section">
-                <div class="section-title">🎮 Controlli Camera</div>
-                
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Rotazione Auto</span>
-                        <span id="rotationValue">0.005</span>
-                    </div>
-                    <input type="range" id="rotationSpeed" class="control-input" min="0" max="0.02" step="0.001" value="0.005">
+                <h3>File Manager</h3>
+                <input type="file" id="fileInput" accept=".obj,.dae" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Carica File 3D
+                </button>
+                <div>
+                    <button class="sample-btn" onclick="loadSample('cube')">Cubo</button>
+                    <button class="sample-btn" onclick="loadSample('sphere')">Sfera</button>
+                    <button class="sample-btn" onclick="loadSample('house')">Casa</button>
                 </div>
-                
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Velocità Camera</span>
-                        <span id="speedValue">1.0x</span>
-                    </div>
-                    <input type="range" id="cameraSpeed" class="control-input" min="0.1" max="3" step="0.1" value="1">
-                </div>
-                
-                <button class="btn" onclick="resetCamera()">🏠 Reset Vista</button>
-                <button class="btn" onclick="toggleAnimation()">▶️ <span id="animText">Anima</span></button>
-                <button class="btn" onclick="fitToScreen()">🎯 Centra</button>
             </div>
             
             <div class="section">
-                <div class="section-title">💡 Illuminazione</div>
-                
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Intensità Luce</span>
-                        <span id="lightValue">1.0</span>
-                    </div>
-                    <input type="range" id="lightIntensity" class="control-input" min="0.1" max="3" step="0.1" value="1">
+                <h3>Informazioni</h3>
+                <div class="info">
+                    <div>File: <span id="fileName">Nessuno</span></div>
+                    <div>FPS: <span id="fps">60</span></div>
+                    <div>Vertici: <span id="vertices">0</span></div>
                 </div>
-                
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Colore Sfondo</span>
-                    </div>
-                    <input type="color" id="backgroundColor" value="#2d3748" style="width: 100%; height: 40px; border: none; border-radius: 8px;">
+            </div>
+            
+            <div class="section">
+                <h3>Controlli</h3>
+                <div style="font-size: 10px; color: #aaa; line-height: 1.4;">
+                    Mouse: Ruota modello<br>
+                    Scroll: Zoom<br>
+                    Drag: Ruota camera
                 </div>
             </div>
         </div>
         
-        <!-- Viewer -->
-        <div class="viewer-container">
-            <div id="viewer"></div>
-            
-            <!-- Welcome Screen -->
-            <div class="welcome-screen" id="welcomeScreen">
-                <div class="welcome-icon">🧊</div>
-                <div class="welcome-title">MarioPro</div>
-                
-                <div class="upload-zone-center" onclick="document.getElementById('fileInputCenter').click()">
-                    <div class="upload-text-center">
-                        <h3>📁 Carica Modello 3D</h3>
-                        <p>Trascina file o tocca per selezionare</p>
-                        <div class="supported-formats">
-                            <span class="format-badge">OBJ</span>
-                            <span class="format-badge">GLTF</span>
-                            <span class="format-badge">GLB</span>
-                        </div>
-                    </div>
-                    <input type="file" id="fileInputCenter" class="file-input" accept=".obj,.gltf,.glb">
-                </div>
+        <div class="viewer">
+            <div class="toolbar">
+                <button class="tool-btn" onclick="resetView()" title="Reset">🏠</button>
+                <button class="tool-btn" onclick="takeScreenshot()" title="Screenshot">📷</button>
+                <button class="tool-btn" onclick="toggleWireframe()" title="Wireframe">📐</button>
             </div>
-            
-            <!-- Loading Screen -->
-            <div class="loading-screen" id="loadingScreen">
-                <div class="loading-spinner"></div>
-                <div id="loadingText">Caricamento modello 3D...</div>
-            </div>
+            <div id="canvas"></div>
         </div>
     </div>
 
-    <script>
-        // Variabili globali
-        let scene, camera, renderer, model;
-        let isAnimating = false;
-        let rotationSpeed = 0.005;
-        let cameraSpeed = 1.0;
-        
-        // Inizializzazione
-        function init() {
-            console.log('Inizializzazione MarioPro...');
-            
-            const container = document.getElementById('viewer');
-            
-            // Scena
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x2d3748);
-            
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(5, 5, 5);
-            camera.lookAt(0, 0, 0);
-            
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-            
-            // Illuminazione
-            setupLighting();
-            
-            // Modello demo
-            createDemoModel();
-            
-            // Controlli
-            setupControls();
-            
-            // Event listeners
-            setupEventListeners();
-            
-            // Avvia rendering
-            animate();
-            
-            console.log('MarioPro inizializzato!');
+<script>
+let scene, camera, renderer, currentModel;
+let isMouseDown = false, mouseX = 0, mouseY = 0;
+let rotX = 0, rotY = 0, targetRotX = 0, targetRotY = 0;
+let wireframe = false;
+
+function init() {
+    const canvas = document.getElementById('canvas');
+    
+    if (typeof THREE === 'undefined') {
+        canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Three.js non caricato</div>';
+        return;
+    }
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+
+    camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    camera.position.set(5, 5, 5);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.shadowMap.enabled = true;
+    canvas.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 5);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
+
+    const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshLambertMaterial({ color: 0x333333 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    setupControls();
+    loadSample('cube');
+    animate();
+    
+    window.addEventListener('resize', handleResize);
+    showNotification('3D Viewer inizializzato', 'success');
+}
+
+function setupControls() {
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener('mousedown', (e) => {
+        isMouseDown = true;
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        const deltaX = e.clientX - mouseX;
+        const deltaY = e.clientY - mouseY;
+        targetRotY += deltaX * 0.01;
+        targetRotX += deltaY * 0.01;
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    canvas.addEventListener('mouseup', () => { isMouseDown = false; });
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoom = e.deltaY * 0.001;
+        camera.position.multiplyScalar(1 + zoom);
+        const distance = camera.position.length();
+        if (distance < 2) camera.position.normalize().multiplyScalar(2);
+        if (distance > 50) camera.position.normalize().multiplyScalar(50);
+    });
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    rotX += (targetRotX - rotX) * 0.1;
+    rotY += (targetRotY - rotY) * 0.1;
+
+    if (currentModel) {
+        currentModel.rotation.x = rotX;
+        currentModel.rotation.y = rotY;
+    }
+
+    renderer.render(scene, camera);
+}
+
+function loadSample(type) {
+    if (currentModel) scene.remove(currentModel);
+
+    let geometry, material;
+
+    switch (type) {
+        case 'cube':
+            geometry = new THREE.BoxGeometry(2, 2, 2);
+            material = new THREE.MeshLambertMaterial({ color: 0xff6b6b, wireframe: wireframe }); // Rosso
+            currentModel = new THREE.Mesh(geometry, material);
+            currentModel.position.y = 1;
+            document.getElementById('fileName').textContent = 'Cubo.obj';
+            break;
+        case 'sphere':
+            geometry = new THREE.SphereGeometry(1.5, 32, 32);
+            material = new THREE.MeshLambertMaterial({ color: 0x4ecdc4, wireframe: wireframe }); // Turchese
+            currentModel = new THREE.Mesh(geometry, material);
+            currentModel.position.y = 1.5;
+            document.getElementById('fileName').textContent = 'Sfera.obj';
+            break;
+        case 'house':
+            currentModel = new THREE.Group();
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(3, 2, 3), 
+                new THREE.MeshLambertMaterial({ color: 0xffa500, wireframe: wireframe }) // Arancione
+            );
+            base.position.y = 1;
+            currentModel.add(base);
+            const roof = new THREE.Mesh(
+                new THREE.ConeGeometry(2.2, 1.5, 4), 
+                new THREE.MeshLambertMaterial({ color: 0x8b4513, wireframe: wireframe }) // Marrone
+            );
+            roof.position.y = 2.75;
+            currentModel.add(roof);
+            document.getElementById('fileName').textContent = 'Casa.obj';
+            break;
+    }
+
+    currentModel.castShadow = true;
+    scene.add(currentModel);
+    document.getElementById('vertices').textContent = geometry ? geometry.attributes.position.count : 'N/A';
+    resetView();
+    showNotification('Modello ' + type + ' caricato', 'success');
+}
+
+function resetView() {
+    camera.position.set(5, 5, 5);
+    camera.lookAt(0, 1, 0);
+    targetRotX = 0;
+    targetRotY = 0;
+}
+
+function takeScreenshot() {
+    const link = document.createElement('a');
+    link.download = '3d-screenshot-' + Date.now() + '.png';
+    link.href = renderer.domElement.toDataURL();
+    link.click();
+    showNotification('Screenshot salvato', 'success');
+}
+
+function toggleWireframe() {
+    wireframe = !wireframe;
+    if (currentModel) {
+        if (currentModel.traverse) {
+            currentModel.traverse(child => {
+                if (child.isMesh) child.material.wireframe = wireframe;
+            });
+        } else {
+            currentModel.material.wireframe = wireframe;
         }
-        
-        function setupLighting() {
-            // Luce ambientale
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-            scene.add(ambientLight);
-            
-            // Luce direzionale
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(10, 10, 5);
-            scene.add(directionalLight);
+    }
+    showNotification('Wireframe ' + (wireframe ? 'attivo' : 'disattivo'), 'success');
+}
+
+function handleResize() {
+    const canvas = document.getElementById('canvas');
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = 'notification ' + type;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.classList.add('show'), 100);
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 2500);
+}
+
+// File loading
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        loadFile(file);
+    }
+});
+
+function loadFile(file) {
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.obj')) {
+        loadOBJ(file);
+    } else if (fileName.endsWith('.dae')) {
+        loadDAE(file);
+    } else {
+        showNotification('Formato non supportato', 'error');
+    }
+}
+
+function loadOBJ(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const geometry = parseOBJ(e.target.result);
+            setModel(geometry, file.name);
+            showNotification('File OBJ caricato', 'success');
+        } catch (error) {
+            showNotification('Errore caricamento OBJ', 'error');
         }
-        
-        function createDemoModel() {
-            const geometry = new THREE.BoxGeometry(2, 2, 2);
-            const material = new THREE.MeshStandardMaterial({ 
-                color: 0x667eea,
-                metalness: 0.3,
-                roughness: 0.4
-            });
-            
-            model = new THREE.Mesh(geometry, material);
-            scene.add(model);
+    };
+    reader.readAsText(file);
+}
+
+function loadDAE(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const geometry = parseDAE(e.target.result);
+            setModel(geometry, file.name);
+            showNotification('File DAE caricato', 'success');
+        } catch (error) {
+            showNotification('Errore caricamento DAE', 'error');
         }
+    };
+    reader.readAsText(file);
+}
+
+function parseOBJ(data) {
+    const vertices = [];
+    const faces = [];
+    const lines = data.split('\n');
+    
+    for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
         
-        function setupControls() {
-            // Mouse controls per desktop
-            let isMouseDown = false;
-            let mouseX = 0, mouseY = 0;
-            
-            renderer.domElement.addEventListener('mousedown', (event) => {
-                isMouseDown = true;
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-            });
-            
-            renderer.domElement.addEventListener('mousemove', (event) => {
-                if (!isMouseDown) return;
-                
-                const deltaX = event.clientX - mouseX;
-                const deltaY = event.clientY - mouseY;
-                
-                // Ruota la camera attorno al modello
-                const spherical = new THREE.Spherical();
-                spherical.setFromVector3(camera.position);
-                spherical.theta += deltaX * 0.01;
-                spherical.phi += deltaY * 0.01;
-                spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
-                
-                camera.position.setFromSpherical(spherical);
-                camera.lookAt(0, 0, 0);
-                
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-            });
-            
-            renderer.domElement.addEventListener('mouseup', () => {
-                isMouseDown = false;
-            });
-            
-            // Zoom con scroll
-            renderer.domElement.addEventListener('wheel', (event) => {
-                const distance = camera.position.length();
-                const newDistance = distance + event.deltaY * 0.01;
-                if (newDistance > 1 && newDistance < 50) {
-                    camera.position.normalize().multiplyScalar(newDistance);
+        if (parts[0] === 'v') {
+            vertices.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+        } else if (parts[0] === 'f') {
+            const indices = parts.slice(1).map(p => parseInt(p.split('/')[0]) - 1);
+            if (indices.length >= 3) {
+                for (let i = 1; i < indices.length - 1; i++) {
+                    faces.push(indices[0], indices[i], indices[i + 1]);
                 }
-            });
-        }
-        
-        function setupEventListeners() {
-            // File input
-            const fileInput = document.getElementById('fileInputCenter');
-            fileInput.addEventListener('change', handleFileUpload);
-            
-            // Controlli
-            document.getElementById('rotationSpeed').addEventListener('input', (e) => {
-                rotationSpeed = parseFloat(e.target.value);
-                document.getElementById('rotationValue').textContent = rotationSpeed.toFixed(3);
-            });
-            
-            document.getElementById('cameraSpeed').addEventListener('input', (e) => {
-                cameraSpeed = parseFloat(e.target.value);
-                document.getElementById('speedValue').textContent = cameraSpeed.toFixed(1) + 'x';
-            });
-            
-            document.getElementById('lightIntensity').addEventListener('input', (e) => {
-                const intensity = parseFloat(e.target.value);
-                scene.traverse((child) => {
-                    if (child.type === 'DirectionalLight') {
-                        child.intensity = intensity;
-                    }
-                });
-                document.getElementById('lightValue').textContent = intensity.toFixed(1);
-            });
-            
-            document.getElementById('backgroundColor').addEventListener('input', (e) => {
-                scene.background = new THREE.Color(e.target.value);
-            });
-            
-            // Resize
-            window.addEventListener('resize', onWindowResize);
-        }
-        
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const fileName = file.name.toLowerCase();
-            const fileExtension = fileName.split('.').pop();
-            
-            console.log('File caricato:', file.name, 'Tipo:', fileExtension);
-            
-            // Verifica formato supportato
-            if (!['obj', 'gltf', 'glb'].includes(fileExtension)) {
-                showNotification('Formato non supportato. Usa OBJ, GLTF o GLB', 'error');
-                return;
-            }
-            
-            // Mostra loading
-            showLoadingScreen('Caricamento ' + file.name + '...');
-            
-            // Nascondi welcome screen
-            document.getElementById('welcomeScreen').style.display = 'none';
-            
-            // Rimuovi modello precedente
-            if (model) {
-                scene.remove(model);
-            }
-            
-            // Carica in base al formato
-            if (fileExtension === 'obj') {
-                loadOBJFile(file);
-            } else if (fileExtension === 'gltf' || fileExtension === 'glb') {
-                loadGLTFFile(file);
             }
         }
-        
-        function loadOBJFile(file) {
-            console.log('Caricamento file OBJ...');
-            
-            if (!window.THREE || !THREE.OBJLoader) {
-                showNotification('OBJLoader non disponibile', 'error');
-                hideLoadingScreen();
-                return;
+    }
+    
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(faces);
+    geometry.computeVertexNormals();
+    return geometry;
+}
+
+function parseDAE(data) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data, 'text/xml');
+    const vertices = [];
+    const faces = [];
+    
+    const sources = xmlDoc.getElementsByTagName('source');
+    for (const source of sources) {
+        const floatArray = source.getElementsByTagName('float_array')[0];
+        if (floatArray) {
+            const values = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
+            for (let i = 0; i < values.length; i += 3) {
+                vertices.push(values[i], values[i + 1], values[i + 2]);
             }
-            
-            const loader = new THREE.OBJLoader();
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const objData = e.target.result;
-                    const loadedModel = loader.parse(objData);
-                    
-                    // Applica materiale
-                    const material = new THREE.MeshStandardMaterial({ 
-                        color: 0x888888,
-                        metalness: 0.3,
-                        roughness: 0.7
-                    });
-                    
-                    loadedModel.traverse(function(child) {
-                        if (child.isMesh) {
-                            child.material = material;
-                        }
-                    });
-                    
-                    model = loadedModel;
-                    scene.add(model);
-                    
-                    // Centra il modello
-                    centerAndScaleModel();
-                    
-                    hideLoadingScreen();
-                    showNotification('File OBJ caricato con successo!', 'success');
-                    fitToScreen();
-                    
-                } catch (error) {
-                    console.error('Errore caricamento OBJ:', error);
-                    hideLoadingScreen();
-                    showNotification('Errore nel caricamento del file OBJ', 'error');
-                }
-            };
-            
-            reader.onerror = function() {
-                hideLoadingScreen();
-                showNotification('Errore nella lettura del file', 'error');
-            };
-            
-            reader.readAsText(file);
+            break;
         }
-        
-        function loadGLTFFile(file) {
-            console.log('Caricamento file GLTF/GLB...');
-            
-            if (!window.THREE || !THREE.GLTFLoader) {
-                showNotification('GLTFLoader non disponibile', 'error');
-                hideLoadingScreen();
-                return;
-            }
-            
-            const loader = new THREE.GLTFLoader();
-            const reader = new FileReader();
-            const isGLB = file.name.toLowerCase().endsWith('.glb');
-            
-            reader.onload = function(e) {
-                try {
-                    const onLoad = function(gltf) {
-                        model = gltf.scene;
-                        scene.add(model);
-                        
-                        // Centra il modello
-                        centerAndScaleModel();
-                        
-                        hideLoadingScreen();
-                        showNotification('File ' + (isGLB ? 'GLB' : 'GLTF') + ' caricato con successo!', 'success');
-                        fitToScreen();
-                    };
-                    
-                    const onError = function(error) {
-                        console.error('Errore caricamento GLTF:', error);
-                        hideLoadingScreen();
-                        showNotification('Errore nel caricamento del file GLTF', 'error');
-                    };
-                    
-                    if (isGLB) {
-                        loader.parse(e.target.result, '', onLoad, onError);
-                    } else {
-                        loader.parse(e.target.result, '', onLoad, onError);
-                    }
-                    
-                } catch (error) {
-                    console.error('Errore parsing GLTF:', error);
-                    hideLoadingScreen();
-                    showNotification('Errore nel parsing del file', 'error');
-                }
-            };
-            
-            reader.onerror = function() {
-                hideLoadingScreen();
-                showNotification('Errore nella lettura del file', 'error');
-            };
-            
-            if (isGLB) {
-                reader.readAsArrayBuffer(file);
-            } else {
-                reader.readAsText(file);
+    }
+    
+    const triangles = xmlDoc.getElementsByTagName('triangles')[0];
+    if (triangles) {
+        const p = triangles.getElementsByTagName('p')[0];
+        if (p) {
+            const indices = p.textContent.trim().split(/\s+/).map(parseInt);
+            for (let i = 0; i < indices.length; i += 3) {
+                faces.push(indices[i], indices[i + 1], indices[i + 2]);
             }
         }
-        
-        function centerAndScaleModel() {
-            if (!model) return;
-            
-            // Calcola bounding box
-            const box = new THREE.Box3().setFromObject(model);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            
-            // Centra il modello
-            model.position.sub(center);
-            
-            // Scala se troppo grande
-            const maxDim = Math.max(size.x, size.y, size.z);
-            if (maxDim > 5) {
-                const scale = 5 / maxDim;
-                model.scale.multiplyScalar(scale);
-            }
-        }
-        
-        function showLoadingScreen(message) {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const loadingText = document.getElementById('loadingText');
-            loadingText.textContent = message;
-            loadingScreen.style.display = 'flex';
-        }
-        
-        function hideLoadingScreen() {
-            document.getElementById('loadingScreen').style.display = 'none';
-        }
-        
-        function toggleAnimation() {
-            isAnimating = !isAnimating;
-            const animText = document.getElementById('animText');
-            animText.textContent = isAnimating ? 'Pausa' : 'Anima';
-            showNotification('Animazione ' + (isAnimating ? 'attivata' : 'disattivata'), 'info');
-        }
-        
-        function resetCamera() {
-            camera.position.set(5, 5, 5);
-            camera.lookAt(0, 0, 0);
-            showNotification('Camera ripristinata', 'success');
-        }
-        
-        function fitToScreen() {
-            if (model) {
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const distance = maxDim * 2;
-                
-                camera.position.set(distance, distance, distance);
-                camera.lookAt(center);
-                showNotification('Modello centrato', 'success');
-            }
-        }
-        
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
-        
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = 'notification notification-' + type;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-        
-        function onWindowResize() {
-            const container = document.getElementById('viewer');
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            
-            // Mobile detection
-            const mobileBtn = document.getElementById('mobileMenuBtn');
-            if (window.innerWidth <= 768) {
-                mobileBtn.style.display = 'block';
-            } else {
-                mobileBtn.style.display = 'none';
-                document.getElementById('sidebar').classList.remove('open');
-            }
-        }
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if (isAnimating && model) {
-                model.rotation.y += rotationSpeed;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        // Avvio
-        window.addEventListener('DOMContentLoaded', () => {
-            init();
-            onWindowResize();
-        });
-    </script>
+    }
+    
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(faces);
+    geometry.computeVertexNormals();
+    return geometry;
+}
+
+function setModel(geometry, fileName) {
+    if (currentModel) scene.remove(currentModel);
+    
+    const material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7, wireframe: wireframe, side: THREE.DoubleSide });
+    currentModel = new THREE.Mesh(geometry, material);
+    currentModel.castShadow = true;
+    
+    const box = new THREE.Box3().setFromObject(currentModel);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    
+    currentModel.position.copy(center).negate();
+    currentModel.position.y = size.y / 2;
+    
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim > 10) {
+        const scale = 10 / maxDim;
+        currentModel.scale.setScalar(scale);
+    }
+    
+    scene.add(currentModel);
+    document.getElementById('fileName').textContent = fileName;
+    document.getElementById('vertices').textContent = geometry.attributes.position.count;
+    resetView();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
