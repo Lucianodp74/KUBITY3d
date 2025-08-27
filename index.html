@@ -76,8 +76,19 @@
             cursor: pointer;
             font-weight: 500;
             margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.4);
         }
         
+        .sample-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
         .sample-btn {
             flex: 1;
             padding: 10px;
@@ -87,11 +98,13 @@
             color: #ccc;
             cursor: pointer;
             font-size: 12px;
-            margin-right: 10px;
+            transition: all 0.3s ease;
         }
         
         .sample-btn:hover {
             background: #404040;
+            border-color: #4fc3f7;
+            color: #4fc3f7;
         }
         
         .viewer {
@@ -131,11 +144,13 @@
             align-items: center;
             justify-content: center;
             font-size: 18px;
+            transition: all 0.3s ease;
         }
         
         .tool-btn:hover {
             background: #555;
             color: white;
+            transform: scale(1.1);
         }
         
         .nav-controls {
@@ -161,11 +176,13 @@
             color: #ccc;
             cursor: pointer;
             font-size: 18px;
+            transition: all 0.3s ease;
         }
         
         .nav-btn:hover {
             background: #4fc3f7;
             color: white;
+            transform: scale(1.1);
         }
         
         .view-grid {
@@ -183,6 +200,7 @@
             color: #ccc;
             cursor: pointer;
             font-size: 11px;
+            transition: all 0.3s ease;
         }
         
         .view-btn:hover {
@@ -235,6 +253,7 @@
             transform: translateX(400px);
             transition: transform 0.3s ease;
             z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
         .notification.show {
@@ -248,6 +267,47 @@
         .notification.error {
             border-left-color: #f44336;
         }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4fc3f7;
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+            
+            .nav-controls {
+                bottom: 10px;
+                gap: 8px;
+                padding: 8px;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -255,19 +315,19 @@
         <div class="sidebar">
             <div class="header">
                 <div class="logo">3D Viewer Pro</div>
-                <div class="subtitle">Working Edition</div>
+                <div class="subtitle">Versione Corretta</div>
             </div>
             
             <div class="section">
                 <h3>File Manager</h3>
-                <input type="file" id="fileInput" accept=".obj,.glb,.gltf,.dae" style="display: none;">
+                <input type="file" id="fileInput" accept=".obj,.dae,.glb,.gltf,.stl" style="display: none;">
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                    Carica Modello 3D
+                    📁 Carica Modello 3D
                 </button>
-                <div style="display: flex; gap: 10px;">
-                    <button class="sample-btn" onclick="loadSample('house')">Casa</button>
-                    <button class="sample-btn" onclick="loadSample('cube')">Cubo</button>
-                    <button class="sample-btn" onclick="loadSample('sphere')">Sfera</button>
+                <div class="sample-buttons">
+                    <button class="sample-btn" onclick="loadSample('house')">🏠 Casa</button>
+                    <button class="sample-btn" onclick="loadSample('cube')">🎲 Cubo</button>
+                    <button class="sample-btn" onclick="loadSample('sphere')">⚪ Sfera</button>
                 </div>
             </div>
             
@@ -282,10 +342,18 @@
             <div class="section">
                 <h3>Statistiche</h3>
                 <div class="info-card">
-                    <h4>Modello</h4>
+                    <h4>📊 Modello</h4>
                     <div class="info-row">
                         <span class="info-label">File:</span>
                         <span class="info-value" id="fileName">Nessuno</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Vertici:</span>
+                        <span class="info-value" id="vertexCount">0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Triangoli:</span>
+                        <span class="info-value" id="triangleCount">0</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">FPS:</span>
@@ -294,11 +362,12 @@
                 </div>
                 
                 <div class="info-card">
-                    <h4>Controlli</h4>
-                    <div style="font-size: 10px; color: #aaa; line-height: 1.4;">
-                        Mouse: Ruota modello<br>
-                        Scroll: Zoom<br>
-                        Pulsanti: Cambia vista
+                    <h4>🎮 Controlli</h4>
+                    <div style="font-size: 10px; color: #aaa; line-height: 1.5;">
+                        <div>🖱️ Mouse: Ruota modello</div>
+                        <div>🎯 Scroll: Zoom avanti/indietro</div>
+                        <div>⌨️ Pulsanti: Cambia vista rapida</div>
+                        <div>📸 Screenshot: Salva immagine</div>
                     </div>
                 </div>
             </div>
@@ -306,277 +375,119 @@
         
         <div class="viewer">
             <div class="toolbar">
-                <button class="tool-btn" onclick="takeScreenshot()">📸</button>
-                <button class="tool-btn" onclick="resetView()">🏠</button>
+                <button class="tool-btn" onclick="takeScreenshot()" title="Fai Screenshot">📸</button>
+                <button class="tool-btn" onclick="resetView()" title="Ripristina Vista">🏠</button>
+                <button class="tool-btn" onclick="toggleWireframe()" title="Toggle Wireframe">🔲</button>
             </div>
             
             <div id="canvas"></div>
             
             <div class="nav-controls">
-                <button class="nav-btn" onclick="setView('front')">↑</button>
-                <button class="nav-btn" onclick="setView('back')">↓</button>
-                <button class="nav-btn" onclick="setView('left')">←</button>
-                <button class="nav-btn" onclick="setView('right')">→</button>
-                <button class="nav-btn" onclick="setView('top')">⊙</button>
-                <button class="nav-btn" onclick="setView('iso')">⬢</button>
+                <button class="nav-btn" onclick="setView('front')" title="Vista Frontale">▲</button>
+                <button class="nav-btn" onclick="setView('back')" title="Vista Posteriore">▼</button>
+                <button class="nav-btn" onclick="setView('left')" title="Vista Sinistra">◀</button>
+                <button class="nav-btn" onclick="setView('right')" title="Vista Destra">▶</button>
+                <button class="nav-btn" onclick="setView('top')" title="Vista dall'Alto">⬤</button>
+                <button class="nav-btn" onclick="setView('iso')" title="Vista Isometrica">◆</button>
             </div>
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, currentModel;
+        let scene, camera, renderer, currentModel, controls;
         let mouseDown = false, mouseX = 0, mouseY = 0;
         let rotationX = 0, rotationY = 0;
         let targetRotX = 0, targetRotY = 0;
         let frameCount = 0, lastTime = Date.now();
+        let isWireframe = false;
 
         function init() {
             const canvas = document.getElementById('canvas');
             
-            // Controlla se Three.js è caricato
+            // Verifica che Three.js sia caricato
             if (typeof THREE === 'undefined') {
-                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Errore: Three.js non caricato</div>';
+                canvas.innerHTML = '<div class="loading">❌ Errore: Three.js non caricato</div>';
                 return;
             }
 
             try {
-                // Scene
+                // Scene setup
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0x222222);
+                scene.fog = new THREE.Fog(0x222222, 50, 200);
 
-                // Camera
+                // Camera setup
                 camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
                 camera.position.set(5, 5, 5);
                 camera.lookAt(0, 0, 0);
 
-                // Renderer
-                renderer = new THREE.WebGLRenderer({ antialias: true });
+                // Renderer setup
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: true, 
+                    preserveDrawingBuffer: true // Per gli screenshot
+                });
                 renderer.setSize(canvas.clientWidth, canvas.clientHeight);
                 renderer.shadowMap.enabled = true;
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer.setClearColor(0x222222);
 
                 canvas.appendChild(renderer.domElement);
 
-                // Lights
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                // Improved lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
                 scene.add(ambientLight);
 
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
                 directionalLight.position.set(10, 10, 5);
                 directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 50;
                 scene.add(directionalLight);
 
-                // Ground
-                const groundGeometry = new THREE.PlaneGeometry(20, 20);
-                const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                // Add point lights for better illumination
+                const pointLight1 = new THREE.PointLight(0x4fc3f7, 0.5, 100);
+                pointLight1.position.set(-10, 10, 10);
+                scene.add(pointLight1);
+
+                const pointLight2 = new THREE.PointLight(0xff6b6b, 0.5, 100);
+                pointLight2.position.set(10, -10, -10);
+                scene.add(pointLight2);
+
+                // Improved ground
+                const groundGeometry = new THREE.PlaneGeometry(50, 50);
+                const groundMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x333333,
+                    transparent: true,
+                    opacity: 0.8
+                });
                 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
                 ground.rotation.x = -Math.PI / 2;
                 ground.receiveShadow = true;
                 scene.add(ground);
 
-                // Load default model
+                // Grid helper
+                const gridHelper = new THREE.GridHelper(50, 50, 0x444444, 0x444444);
+                gridHelper.material.opacity = 0.3;
+                gridHelper.material.transparent = true;
+                scene.add(gridHelper);
+
+                // Carica modello di default
                 loadSample('cube');
 
-                // Mouse controls
+                // Setup controlli
                 setupControls();
 
-                // Start render loop
+                // Avvia render loop
                 animate();
-
-                // Handle resize
-                window.addEventListener('resize', handleResize);
-
-                showNotification('3D Viewer caricato con successo!', 'success');
-
-            } catch (error) {
-                console.error('Errore inizializzazione 3D:', error);
-                canvas.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:white;">Errore WebGL</div>';
-            }
-        }
-
-        function setupControls() {
-            const canvas = renderer.domElement;
-
-            canvas.addEventListener('mousedown', (e) => {
-                mouseDown = true;
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            canvas.addEventListener('mousemove', (e) => {
-                if (!mouseDown) return;
-
-                const deltaX = e.clientX - mouseX;
-                const deltaY = e.clientY - mouseY;
-
-                targetRotY += deltaX * 0.01;
-                targetRotX += deltaY * 0.01;
-
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                mouseDown = false;
-            });
-
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoom = e.deltaY * 0.001;
-                camera.position.multiplyScalar(1 + zoom);
-                const distance = camera.position.length();
-                if (distance < 2) camera.position.normalize().multiplyScalar(2);
-                if (distance > 50) camera.position.normalize().multiplyScalar(50);
-            });
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Smooth rotation
-            rotationX += (targetRotX - rotationX) * 0.1;
-            rotationY += (targetRotY - rotationY) * 0.1;
-
-            if (currentModel) {
-                currentModel.rotation.x = rotationX;
-                currentModel.rotation.y = rotationY;
-            }
-
-            renderer.render(scene, camera);
-
-            // FPS counter
-            frameCount++;
-            const now = Date.now();
-            if (now > lastTime + 1000) {
-                const fps = Math.round((frameCount * 1000) / (now - lastTime));
-                document.getElementById('fpsDisplay').textContent = fps;
-                frameCount = 0;
-                lastTime = now;
-            }
-        }
-
-        function loadSample(type) {
-            if (currentModel) {
-                scene.remove(currentModel);
-            }
-
-            let geometry, material;
-
-            switch (type) {
-                case 'house':
-                    currentModel = new THREE.Group();
-                    
-                    // Base
-                    const base = new THREE.Mesh(
-                        new THREE.BoxGeometry(3, 2, 3),
-                        new THREE.MeshLambertMaterial({ color: 0xffa500 })
-                    );
-                    base.position.y = 1;
-                    base.castShadow = true;
-                    currentModel.add(base);
-                    
-                    // Roof
-                    const roof = new THREE.Mesh(
-                        new THREE.ConeGeometry(2.2, 1.5, 4),
-                        new THREE.MeshLambertMaterial({ color: 0x8b4513 })
-                    );
-                    roof.position.y = 2.75;
-                    roof.rotation.y = Math.PI / 4;
-                    roof.castShadow = true;
-                    currentModel.add(roof);
-                    
-                    document.getElementById('fileName').textContent = 'Casa_3D.obj';
-                    break;
-
-                case 'cube':
-                    geometry = new THREE.BoxGeometry(2, 2, 2);
-                    material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7 });
-                    currentModel = new THREE.Mesh(geometry, material);
-                    currentModel.position.y = 1;
-                    currentModel.castShadow = true;
-                    document.getElementById('fileName').textContent = 'Cubo.obj';
-                    break;
-
-                case 'sphere':
-                    geometry = new THREE.SphereGeometry(1.5, 32, 32);
-                    material = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
-                    currentModel = new THREE.Mesh(geometry, material);
-                    currentModel.position.y = 1.5;
-                    currentModel.castShadow = true;
-                    document.getElementById('fileName').textContent = 'Sfera.obj';
-                    break;
-            }
-
-            scene.add(currentModel);
-            resetView();
-            showNotification('Modello ' + type + ' caricato!', 'success');
-        }
-
-        function setViewMode(mode) {
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            if (!currentModel) return;
-
-            if (currentModel.traverse) {
-                currentModel.traverse((child) => {
-                    if (child.isMesh) {
-                        if (mode === 'wireframe') {
-                            child.material.wireframe = true;
-                        } else {
-                            child.material.wireframe = false;
-                        }
-                    }
-                });
-            } else {
-                if (mode === 'wireframe') {
-                    currentModel.material.wireframe = true;
-                } else {
-                    currentModel.material.wireframe = false;
-                }
-            }
-
-            showNotification('Modalità: ' + mode, 'success');
-        }
-
-        function setView(view) {
-            if (!currentModel) return;
-
-            const distance = 8;
-
-            switch (view) {
-                case 'front':
-                    camera.position.set(0, 2, distance);
-                    break;
-                case 'back':
-                    camera.position.set(0, 2, -distance);
-                    break;
-                case 'left':
-                    camera.position.set(-distance, 2, 0);
-                    break;
-                case 'right':
-                    camera.position.set(distance, 2, 0);
-                    break;
-                case 'top':
-                    camera.position.set(0, distance, 0);
-                    break;
-                case 'iso':
-                    camera.position.set(distance, distance, distance);
-                    break;
-            }
-
-            camera.lookAt(0, 1, 0);
-            targetRotX = 0;
-            targetRotY = 0;
-            showNotification('Vista: ' + view, 'success');
         }
 
         function resetView() {
-            camera.position.set(5, 5, 5);
-            camera.lookAt(0, 1, 0);
+            animateCameraTo(new THREE.Vector3(5, 5, 5), new THREE.Vector3(0, 1, 0));
             targetRotX = 0;
             targetRotY = 0;
-            showNotification('Vista ripristinata', 'success');
+            showNotification('🏠 Vista ripristinata', 'success');
         }
 
         function takeScreenshot() {
@@ -586,21 +497,27 @@
             const dataURL = renderer.domElement.toDataURL('image/png');
 
             const link = document.createElement('a');
-            link.download = '3d-screenshot-' + Date.now() + '.png';
+            link.download = '3d-screenshot-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.png';
             link.href = dataURL;
             link.click();
 
-            showNotification('Screenshot salvato!', 'success');
+            showNotification('📸 Screenshot salvato!', 'success');
         }
 
         function handleResize() {
             const canvas = document.getElementById('canvas');
-            camera.aspect = canvas.clientWidth / canvas.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            if (canvas && camera && renderer) {
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            }
         }
 
-        function showNotification(message, type) {
+        function showNotification(message, type = 'success') {
+            // Rimuovi notifiche esistenti
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
+
             const notification = document.createElement('div');
             notification.className = 'notification ' + type;
             notification.textContent = message;
@@ -618,24 +535,171 @@
             }, 3000);
         }
 
-        // File upload handler with OBJ and DAE parser
+        // File upload handler migliorato
         document.getElementById('fileInput').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
                 const fileName = file.name.toLowerCase();
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2); // MB
+                
+                if (fileSize > 50) {
+                    showNotification('⚠️ File troppo grande (max 50MB): ' + fileSize + 'MB', 'error');
+                    return;
+                }
                 
                 if (fileName.endsWith('.obj')) {
                     loadOBJFile(file);
                 } else if (fileName.endsWith('.dae')) {
                     loadDAEFile(file);
+                } else if (fileName.endsWith('.stl')) {
+                    loadSTLFile(file);
                 } else {
-                    showNotification('Formato non supportato. Usa file .obj o .dae', 'error');
+                    showNotification('❌ Formato non supportato. Usa: .obj, .dae, .stl', 'error');
                 }
             }
         });
 
+        function loadSTLFile(file) {
+            showNotification('⏳ Caricamento STL: ' + file.name + '...', 'success');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const stlData = e.target.result;
+                    const geometry = parseSTL(stlData);
+                    
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: 0x4fc3f7,
+                        side: THREE.DoubleSide,
+                        shininess: 100
+                    });
+                    
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.castShadow = true;
+                    currentModel.receiveShadow = true;
+                    
+                    centerAndScaleModel();
+                    scene.add(currentModel);
+                    
+                    document.getElementById('fileName').textContent = file.name;
+                    updateModelStats(geometry);
+                    resetView();
+                    
+                    showNotification('✅ File STL caricato: ' + geometry.attributes.position.count + ' vertici', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore parsing STL:', error);
+                    showNotification('❌ Errore nel caricamento STL: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('❌ Errore nella lettura del file STL', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseSTL(buffer) {
+            const dataview = new DataView(buffer);
+            
+            // Check if binary STL (starts with triangle count after 80-byte header)
+            if (buffer.byteLength > 84) {
+                const triangleCount = dataview.getUint32(80, true);
+                const expectedSize = 80 + 4 + (triangleCount * 50);
+                
+                if (expectedSize === buffer.byteLength) {
+                    return parseBinarySTL(dataview, triangleCount);
+                }
+            }
+            
+            // Try as ASCII STL
+            const text = new TextDecoder().decode(buffer);
+            return parseAsciiSTL(text);
+        }
+
+        function parseBinarySTL(dataview, triangleCount) {
+            const vertices = [];
+            const normals = [];
+            
+            let offset = 84; // Skip header + triangle count
+            
+            for (let i = 0; i < triangleCount; i++) {
+                // Normal (3 floats)
+                const nx = dataview.getFloat32(offset, true);
+                const ny = dataview.getFloat32(offset + 4, true);
+                const nz = dataview.getFloat32(offset + 8, true);
+                offset += 12;
+                
+                // 3 vertices (9 floats)
+                for (let j = 0; j < 3; j++) {
+                    vertices.push(
+                        dataview.getFloat32(offset, true),
+                        dataview.getFloat32(offset + 4, true),
+                        dataview.getFloat32(offset + 8, true)
+                    );
+                    normals.push(nx, ny, nz);
+                    offset += 12;
+                }
+                
+                offset += 2; // Skip attribute byte count
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            
+            return geometry;
+        }
+
+        function parseAsciiSTL(text) {
+            const vertices = [];
+            const normals = [];
+            
+            const lines = text.split('\n');
+            let currentNormal = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.startsWith('facet normal')) {
+                    const parts = line.split(/\s+/);
+                    currentNormal = [
+                        parseFloat(parts[2]) || 0,
+                        parseFloat(parts[3]) || 0,
+                        parseFloat(parts[4]) || 0
+                    ];
+                } else if (line.startsWith('vertex')) {
+                    const parts = line.split(/\s+/);
+                    vertices.push(
+                        parseFloat(parts[1]) || 0,
+                        parseFloat(parts[2]) || 0,
+                        parseFloat(parts[3]) || 0
+                    );
+                    if (currentNormal) {
+                        normals.push(...currentNormal);
+                    }
+                }
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            if (normals.length > 0) {
+                geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            } else {
+                geometry.computeVertexNormals();
+            }
+            
+            return geometry;
+        }
+
         function loadDAEFile(file) {
-            showNotification('Caricamento file DAE ' + file.name + '...', 'success');
+            showNotification('⏳ Caricamento DAE: ' + file.name + '...', 'success');
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -649,55 +713,33 @@
                         scene.remove(currentModel);
                     }
                     
-                    const material = new THREE.MeshLambertMaterial({ 
+                    const material = new THREE.MeshPhongMaterial({ 
                         color: 0x4fc3f7,
-                        side: THREE.DoubleSide 
+                        side: THREE.DoubleSide,
+                        shininess: 100
                     });
                     
                     currentModel = new THREE.Mesh(geometry, material);
                     currentModel.castShadow = true;
                     currentModel.receiveShadow = true;
                     
+                    centerAndScaleModel();
                     scene.add(currentModel);
                     
-                    // Auto-fit and center
-                    const box = new THREE.Box3().setFromObject(currentModel);
-                    const center = box.getCenter(new THREE.Vector3());
-                    const size = box.getSize(new THREE.Vector3());
-                    
-                    // Center the model
-                    currentModel.position.copy(center).negate();
-                    
-                    // Scale if necessary
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    if (maxDim > 20) {
-                        const scale = 20 / maxDim;
-                        currentModel.scale.setScalar(scale);
-                    }
-                    
-                    // Position above ground
-                    currentModel.position.y = Math.max(0, size.y / 2);
-                    
                     document.getElementById('fileName').textContent = file.name;
+                    updateModelStats(geometry);
+                    resetView();
                     
-                    // Reset camera to show the model
-                    const distance = Math.max(maxDim * 1.5, 10);
-                    camera.position.set(distance, distance * 0.7, distance);
-                    camera.lookAt(0, size.y / 2, 0);
-                    
-                    targetRotX = 0;
-                    targetRotY = 0;
-                    
-                    showNotification('File DAE caricato: ' + geometry.attributes.position.count + ' vertici', 'success');
+                    showNotification('✅ File DAE caricato: ' + geometry.attributes.position.count + ' vertici', 'success');
                     
                 } catch (error) {
                     console.error('Errore parsing DAE:', error);
-                    showNotification('Errore nel caricamento: ' + error.message, 'error');
+                    showNotification('❌ Errore nel caricamento DAE: ' + error.message, 'error');
                 }
             };
             
             reader.onerror = function() {
-                showNotification('Errore nella lettura del file DAE', 'error');
+                showNotification('❌ Errore nella lettura del file DAE', 'error');
             };
             
             reader.readAsText(file);
@@ -826,9 +868,13 @@
                 // If no faces, create them based on vertex order
                 const autoFaces = [];
                 for (let i = 0; i < vertices.length / 3; i += 3) {
-                    autoFaces.push(i, i + 1, i + 2);
+                    if (i + 2 < vertices.length / 3) {
+                        autoFaces.push(i, i + 1, i + 2);
+                    }
                 }
-                geometry.setIndex(autoFaces);
+                if (autoFaces.length > 0) {
+                    geometry.setIndex(autoFaces);
+                }
             }
             
             geometry.computeVertexNormals();
@@ -838,14 +884,7 @@
         }
 
         function loadOBJFile(file) {
-            const fileName = file.name.toLowerCase();
-            
-            if (!fileName.endsWith('.obj')) {
-                showNotification('Formato non supportato. Usa file .obj', 'error');
-                return;
-            }
-
-            showNotification('Caricamento ' + file.name + '...', 'success');
+            showNotification('⏳ Caricamento OBJ: ' + file.name + '...', 'success');
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -857,42 +896,33 @@
                         scene.remove(currentModel);
                     }
                     
-                    const material = new THREE.MeshLambertMaterial({ 
+                    const material = new THREE.MeshPhongMaterial({ 
                         color: 0x4fc3f7,
-                        side: THREE.DoubleSide 
+                        side: THREE.DoubleSide,
+                        shininess: 100
                     });
                     
                     currentModel = new THREE.Mesh(geometry, material);
                     currentModel.castShadow = true;
                     currentModel.receiveShadow = true;
                     
-                    // Center the model
-                    const box = new THREE.Box3().setFromObject(currentModel);
-                    const center = box.getCenter(new THREE.Vector3());
-                    currentModel.position.sub(center);
-                    
-                    // Scale if too big
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    if (maxDim > 10) {
-                        const scale = 10 / maxDim;
-                        currentModel.scale.set(scale, scale, scale);
-                    }
-                    
+                    centerAndScaleModel();
                     scene.add(currentModel);
                     
                     document.getElementById('fileName').textContent = file.name;
+                    updateModelStats(geometry);
                     resetView();
-                    showNotification('File OBJ caricato con successo!', 'success');
+                    
+                    showNotification('✅ File OBJ caricato con successo!', 'success');
                     
                 } catch (error) {
                     console.error('Errore parsing OBJ:', error);
-                    showNotification('Errore nel caricamento del file OBJ', 'error');
+                    showNotification('❌ Errore nel caricamento OBJ: ' + error.message, 'error');
                 }
             };
             
             reader.onerror = function() {
-                showNotification('Errore nella lettura del file', 'error');
+                showNotification('❌ Errore nella lettura del file', 'error');
             };
             
             reader.readAsText(file);
@@ -912,81 +942,504 @@
                 if (line.startsWith('v ')) {
                     // Vertex
                     const parts = line.split(/\s+/);
-                    vertices.push(
-                        parseFloat(parts[1]),
-                        parseFloat(parts[2]),
-                        parseFloat(parts[3])
-                    );
+                    if (parts.length >= 4) {
+                        vertices.push(
+                            parseFloat(parts[1]) || 0,
+                            parseFloat(parts[2]) || 0,
+                            parseFloat(parts[3]) || 0
+                        );
+                    }
                 } else if (line.startsWith('vn ')) {
                     // Normal
                     const parts = line.split(/\s+/);
-                    normals.push(
-                        parseFloat(parts[1]),
-                        parseFloat(parts[2]),
-                        parseFloat(parts[3])
-                    );
+                    if (parts.length >= 4) {
+                        normals.push(
+                            parseFloat(parts[1]) || 0,
+                            parseFloat(parts[2]) || 0,
+                            parseFloat(parts[3]) || 0
+                        );
+                    }
                 } else if (line.startsWith('vt ')) {
                     // UV
                     const parts = line.split(/\s+/);
-                    uvs.push(
-                        parseFloat(parts[1]),
-                        parseFloat(parts[2])
-                    );
+                    if (parts.length >= 3) {
+                        uvs.push(
+                            parseFloat(parts[1]) || 0,
+                            parseFloat(parts[2]) || 0
+                        );
+                    }
                 } else if (line.startsWith('f ')) {
                     // Face
                     const parts = line.split(/\s+/);
                     parts.shift(); // Remove 'f'
                     
                     // Convert to triangles if needed
-                    if (parts.length === 3) {
-                        // Already a triangle
-                        for (let j = 0; j < 3; j++) {
-                            const vertexData = parts[j].split('/');
-                            faces.push(parseInt(vertexData[0]) - 1); // OBJ is 1-indexed
+                    const faceVertices = [];
+                    for (let j = 0; j < parts.length; j++) {
+                        const vertexData = parts[j].split('/');
+                        const vertexIndex = parseInt(vertexData[0]);
+                        if (!isNaN(vertexIndex) && vertexIndex > 0) {
+                            faceVertices.push(vertexIndex - 1); // OBJ is 1-indexed
                         }
-                    } else if (parts.length === 4) {
+                    }
+                    
+                    if (faceVertices.length === 3) {
+                        // Triangle
+                        faces.push(...faceVertices);
+                    } else if (faceVertices.length === 4) {
                         // Quad - convert to two triangles
-                        const indices = [];
-                        for (let j = 0; j < 4; j++) {
-                            const vertexData = parts[j].split('/');
-                            indices.push(parseInt(vertexData[0]) - 1);
+                        faces.push(faceVertices[0], faceVertices[1], faceVertices[2]);
+                        faces.push(faceVertices[0], faceVertices[2], faceVertices[3]);
+                    } else if (faceVertices.length > 4) {
+                        // Polygon - fan triangulation
+                        for (let k = 1; k < faceVertices.length - 1; k++) {
+                            faces.push(faceVertices[0], faceVertices[k], faceVertices[k + 1]);
                         }
-                        
-                        // Triangle 1: 0,1,2
-                        faces.push(indices[0], indices[1], indices[2]);
-                        // Triangle 2: 0,2,3
-                        faces.push(indices[0], indices[2], indices[3]);
                     }
                 }
             }
             
-            const geometry = new THREE.BufferGeometry();
-            
-            if (vertices.length > 0) {
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            if (vertices.length === 0) {
+                throw new Error('Nessun vertice trovato nel file OBJ');
             }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             
             if (faces.length > 0) {
                 geometry.setIndex(faces);
             }
             
-            // Compute normals if not provided
-            if (normals.length === 0) {
-                geometry.computeVertexNormals();
-            } else {
-                geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-            }
-            
-            // Center geometry
-            geometry.center();
+            // Compute normals if not provided or if faces are present
+            geometry.computeVertexNormals();
+            geometry.computeBoundingBox();
             
             return geometry;
         }
+
+        function centerAndScaleModel() {
+            if (!currentModel) return;
+            
+            // Calculate bounding box
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            // Center the model
+            currentModel.position.sub(center);
+            
+            // Scale if too big
+            const maxDim = Math.max(size.x, size.y, size.z);
+            if (maxDim > 10) {
+                const scale = 10 / maxDim;
+                currentModel.scale.setScalar(scale);
+            }
+            
+            // Position above ground
+            const modelBox = new THREE.Box3().setFromObject(currentModel);
+            const modelSize = modelBox.getSize(new THREE.Vector3());
+            currentModel.position.y = Math.max(0, modelSize.y / 2);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (!currentModel) return;
+            
+            switch(e.key.toLowerCase()) {
+                case '1':
+                    setView('front');
+                    break;
+                case '2':
+                    setView('back');
+                    break;
+                case '3':
+                    setView('left');
+                    break;
+                case '4':
+                    setView('right');
+                    break;
+                case '5':
+                    setView('top');
+                    break;
+                case '6':
+                    setView('iso');
+                    break;
+                case 'r':
+                    resetView();
+                    break;
+                case 'w':
+                    toggleWireframe();
+                    break;
+                case 's':
+                    e.preventDefault();
+                    takeScreenshot();
+                    break;
+                case 'escape':
+                    resetView();
+                    break;
+            }
+        });
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(init, 100);
         });
+
+        // Prevent context menu on canvas
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.tagName === 'CANVAS') {
+                e.preventDefault();
+            }
+        });
     </script>
 </body>
-</html>
+</html>();
+
+                // Handle resize
+                window.addEventListener('resize', handleResize);
+
+                showNotification('✅ 3D Viewer caricato con successo!', 'success');
+
+            } catch (error) {
+                console.error('Errore inizializzazione 3D:', error);
+                canvas.innerHTML = '<div class="loading">❌ Errore WebGL: ' + error.message + '</div>';
+            }
+        }
+
+        function setupControls() {
+            const canvas = renderer.domElement;
+
+            // Mouse controls migliorati
+            canvas.addEventListener('mousedown', (e) => {
+                mouseDown = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!mouseDown) return;
+
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+
+                targetRotY += deltaX * 0.01;
+                targetRotX += deltaY * 0.01;
+
+                // Limita rotazione verticale
+                targetRotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotX));
+
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                mouseDown = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                mouseDown = false;
+                canvas.style.cursor = 'grab';
+            });
+
+            // Wheel zoom migliorato
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoom = e.deltaY * 0.001;
+                const direction = camera.position.clone().normalize();
+                camera.position.addScaledVector(direction, zoom * camera.position.length() * 0.1);
+                
+                const distance = camera.position.length();
+                if (distance < 2) camera.position.normalize().multiplyScalar(2);
+                if (distance > 100) camera.position.normalize().multiplyScalar(100);
+            });
+
+            // Touch controls per mobile
+            let lastTouchDistance = 0;
+            
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    mouseDown = true;
+                    mouseX = e.touches[0].clientX;
+                    mouseY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+                }
+                e.preventDefault();
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && mouseDown) {
+                    const deltaX = e.touches[0].clientX - mouseX;
+                    const deltaY = e.touches[0].clientY - mouseY;
+
+                    targetRotY += deltaX * 0.01;
+                    targetRotX += deltaY * 0.01;
+                    targetRotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotX));
+
+                    mouseX = e.touches[0].clientX;
+                    mouseY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (lastTouchDistance > 0) {
+                        const zoom = (lastTouchDistance - distance) * 0.01;
+                        const direction = camera.position.clone().normalize();
+                        camera.position.addScaledVector(direction, zoom);
+                        
+                        const camDistance = camera.position.length();
+                        if (camDistance < 2) camera.position.normalize().multiplyScalar(2);
+                        if (camDistance > 100) camera.position.normalize().multiplyScalar(100);
+                    }
+                    
+                    lastTouchDistance = distance;
+                }
+                e.preventDefault();
+            });
+
+            canvas.addEventListener('touchend', (e) => {
+                mouseDown = false;
+                lastTouchDistance = 0;
+                e.preventDefault();
+            });
+
+            canvas.style.cursor = 'grab';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Smooth rotation con easing
+            const ease = 0.1;
+            rotationX += (targetRotX - rotationX) * ease;
+            rotationY += (targetRotY - rotationY) * ease;
+
+            if (currentModel) {
+                currentModel.rotation.x = rotationX;
+                currentModel.rotation.y = rotationY;
+            }
+
+            // Auto-rotate se non c'è interazione
+            if (!mouseDown && currentModel) {
+                targetRotY += 0.003;
+            }
+
+            renderer.render(scene, camera);
+
+            // Aggiorna FPS counter
+            frameCount++;
+            const now = Date.now();
+            if (now > lastTime + 1000) {
+                const fps = Math.round((frameCount * 1000) / (now - lastTime));
+                document.getElementById('fpsDisplay').textContent = fps;
+                frameCount = 0;
+                lastTime = now;
+            }
+        }
+
+        function updateModelStats(geometry) {
+            const vertices = geometry.attributes.position ? geometry.attributes.position.count : 0;
+            const triangles = geometry.index ? geometry.index.count / 3 : vertices / 3;
+            
+            document.getElementById('vertexCount').textContent = vertices.toLocaleString();
+            document.getElementById('triangleCount').textContent = Math.floor(triangles).toLocaleString();
+        }
+
+        function loadSample(type) {
+            if (currentModel) {
+                scene.remove(currentModel);
+            }
+
+            let geometry, material;
+
+            switch (type) {
+                case 'house':
+                    currentModel = new THREE.Group();
+                    
+                    // Base della casa
+                    const base = new THREE.Mesh(
+                        new THREE.BoxGeometry(3, 2, 3),
+                        new THREE.MeshPhongMaterial({ color: 0xffa500 })
+                    );
+                    base.position.y = 1;
+                    base.castShadow = true;
+                    currentModel.add(base);
+                    
+                    // Tetto
+                    const roof = new THREE.Mesh(
+                        new THREE.ConeGeometry(2.2, 1.5, 4),
+                        new THREE.MeshPhongMaterial({ color: 0x8b4513 })
+                    );
+                    roof.position.y = 2.75;
+                    roof.rotation.y = Math.PI / 4;
+                    roof.castShadow = true;
+                    currentModel.add(roof);
+                    
+                    // Porta
+                    const door = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.8, 1.5, 0.1),
+                        new THREE.MeshPhongMaterial({ color: 0x4a4a4a })
+                    );
+                    door.position.set(0, 0.75, 1.55);
+                    currentModel.add(door);
+                    
+                    // Finestre
+                    const windowGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.1);
+                    const windowMaterial = new THREE.MeshPhongMaterial({ color: 0x87ceeb });
+                    
+                    const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+                    window1.position.set(-1, 1.3, 1.55);
+                    currentModel.add(window1);
+                    
+                    const window2 = new THREE.Mesh(windowGeometry, windowMaterial);
+                    window2.position.set(1, 1.3, 1.55);
+                    currentModel.add(window2);
+                    
+                    document.getElementById('fileName').textContent = 'Casa_3D.obj';
+                    updateModelStats(base.geometry);
+                    break;
+
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0x4fc3f7,
+                        shininess: 100 
+                    });
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.position.y = 1;
+                    currentModel.castShadow = true;
+                    document.getElementById('fileName').textContent = 'Cubo.obj';
+                    updateModelStats(geometry);
+                    break;
+
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1.5, 32, 32);
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0xff6b6b,
+                        shininess: 100
+                    });
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.position.y = 1.5;
+                    currentModel.castShadow = true;
+                    document.getElementById('fileName').textContent = 'Sfera.obj';
+                    updateModelStats(geometry);
+                    break;
+            }
+
+            scene.add(currentModel);
+            resetView();
+            showNotification('✅ Modello ' + type + ' caricato!', 'success');
+        }
+
+        function setViewMode(mode) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (!currentModel) return;
+
+            isWireframe = (mode === 'wireframe');
+            applyWireframe(currentModel, isWireframe);
+            showNotification('🎨 Modalità: ' + mode, 'success');
+        }
+
+        function toggleWireframe() {
+            if (!currentModel) return;
+            
+            isWireframe = !isWireframe;
+            applyWireframe(currentModel, isWireframe);
+            
+            // Aggiorna UI
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            const targetBtn = isWireframe ? 
+                document.querySelector('.view-btn:nth-child(2)') : 
+                document.querySelector('.view-btn:nth-child(1)');
+            if (targetBtn) targetBtn.classList.add('active');
+            
+            showNotification(isWireframe ? '🔲 Wireframe ON' : '🎨 Wireframe OFF', 'success');
+        }
+
+        function applyWireframe(object, wireframe) {
+            if (object.traverse) {
+                object.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => mat.wireframe = wireframe);
+                        } else {
+                            child.material.wireframe = wireframe;
+                        }
+                    }
+                });
+            } else if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(mat => mat.wireframe = wireframe);
+                } else {
+                    object.material.wireframe = wireframe;
+                }
+            }
+        }
+
+        function setView(view) {
+            if (!currentModel) return;
+
+            const distance = 8;
+            let targetPos, targetLookAt = new THREE.Vector3(0, 1, 0);
+
+            switch (view) {
+                case 'front':
+                    targetPos = new THREE.Vector3(0, 2, distance);
+                    break;
+                case 'back':
+                    targetPos = new THREE.Vector3(0, 2, -distance);
+                    break;
+                case 'left':
+                    targetPos = new THREE.Vector3(-distance, 2, 0);
+                    break;
+                case 'right':
+                    targetPos = new THREE.Vector3(distance, 2, 0);
+                    break;
+                case 'top':
+                    targetPos = new THREE.Vector3(0, distance, 0);
+                    targetLookAt = new THREE.Vector3(0, 0, 0);
+                    break;
+                case 'iso':
+                    targetPos = new THREE.Vector3(distance, distance * 0.7, distance);
+                    break;
+            }
+
+            // Animazione smooth della camera
+            animateCameraTo(targetPos, targetLookAt);
+            
+            targetRotX = 0;
+            targetRotY = 0;
+            showNotification('📐 Vista: ' + view, 'success');
+        }
+
+        function animateCameraTo(targetPosition, targetLookAt) {
+            const startPos = camera.position.clone();
+            const startLookAt = new THREE.Vector3(0, 1, 0);
+            
+            let progress = 0;
+            const duration = 1000; // 1 secondo
+            const startTime = Date.now();
+
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function (ease-out)
+                const easedProgress = 1 - Math.pow(1 - progress, 3);
+                
+                camera.position.lerpVectors(startPos, targetPosition, easedProgress);
+                camera.lookAt(targetLookAt);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            
+            animate
