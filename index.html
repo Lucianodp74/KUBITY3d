@@ -720,43 +720,56 @@
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const objData = e.target.result;
-                const geometry = parseOBJ(objData);
-                
-                if (currentModel) {
-                    scene.remove(currentModel);
+                try {
+                    const objData = e.target.result;
+                    const geometry = parseOBJ(objData);
+                    
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    // Usa materiale neutrale grigio chiaro invece di blu
+                    const material = new THREE.MeshLambertMaterial({ 
+                        color: 0xcccccc, // Grigio chiaro neutro
+                        side: THREE.DoubleSide 
+                    });
+                    
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.castShadow = true;
+                    currentModel.receiveShadow = true;
+                    
+                    // Centra e scala il modello
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    currentModel.position.sub(center);
+                    
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 10) {
+                        const scale = 10 / maxDim;
+                        currentModel.scale.set(scale, scale, scale);
+                    }
+                    
+                    // Posiziona sopra il terreno
+                    currentModel.position.y = Math.max(0, size.y / 2);
+                    
+                    scene.add(currentModel);
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    const vertexCount = geometry.attributes.position.count;
+                    updateStats(vertexCount, 0);
+                    
+                    resetView();
+                    showNotification('✅ OBJ caricato: ' + vertexCount + ' vertici!', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore parsing OBJ:', error);
+                    showNotification('❌ Errore caricamento OBJ: ' + error.message, 'error');
                 }
-                
-                // Usa materiale neutrale grigio chiaro invece di blu
-                const material = new THREE.MeshLambertMaterial({ 
-                    color: 0xcccccc, // Grigio chiaro neutro
-                    side: THREE.DoubleSide 
-                });
-                
-                currentModel = new THREE.Mesh(geometry, material);
-                currentModel.castShadow = true;
-                currentModel.receiveShadow = true;
-                
-                // Centra e scala il modello
-                const box = new THREE.Box3().setFromObject(currentModel);
-                const center = box.getCenter(new THREE.Vector3());
-                currentModel.position.sub(center);
-                
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                if (maxDim > 10) {
-                    const scale = 10 / maxDim;
-                    currentModel.scale.set(scale, scale, scale);
-                }
-                
-                scene.add(currentModel);
-                document.getElementById('fileName').textContent = file.name;
-                
-                const vertexCount = geometry.attributes.position.count;
-                updateStats(vertexCount, 0);
-                
-                resetView();
-                showNotification('OBJ caricato con texture naturale!', 'success');
+            };
+            
+            reader.onerror = function() {
+                showNotification('❌ Errore lettura file', 'error');
             };
             
             reader.readAsText(file);
@@ -767,41 +780,53 @@
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const daeData = e.target.result;
-                const geometry = parseDAE(daeData);
-                
-                if (currentModel) {
-                    scene.remove(currentModel);
+                try {
+                    const daeData = e.target.result;
+                    const geometry = parseDAE(daeData);
+                    
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    const material = new THREE.MeshLambertMaterial({ 
+                        color: 0xcccccc,
+                        side: THREE.DoubleSide 
+                    });
+                    
+                    currentModel = new THREE.Mesh(geometry, material);
+                    currentModel.castShadow = true;
+                    currentModel.receiveShadow = true;
+                    
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    currentModel.position.sub(center);
+                    
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 10) {
+                        const scale = 10 / maxDim;
+                        currentModel.scale.set(scale, scale, scale);
+                    }
+                    
+                    currentModel.position.y = Math.max(0, size.y / 2);
+                    
+                    scene.add(currentModel);
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    const vertexCount = geometry.attributes.position.count;
+                    updateStats(vertexCount, 0);
+                    
+                    resetView();
+                    showNotification('✅ DAE caricato: ' + vertexCount + ' vertici!', 'success');
+                    
+                } catch (error) {
+                    console.error('Errore parsing DAE:', error);
+                    showNotification('❌ Errore caricamento DAE: ' + error.message, 'error');
                 }
-                
-                const material = new THREE.MeshLambertMaterial({ 
-                    color: 0xcccccc,
-                    side: THREE.DoubleSide 
-                });
-                
-                currentModel = new THREE.Mesh(geometry, material);
-                currentModel.castShadow = true;
-                currentModel.receiveShadow = true;
-                
-                const box = new THREE.Box3().setFromObject(currentModel);
-                const center = box.getCenter(new THREE.Vector3());
-                currentModel.position.sub(center);
-                
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                if (maxDim > 10) {
-                    const scale = 10 / maxDim;
-                    currentModel.scale.set(scale, scale, scale);
-                }
-                
-                scene.add(currentModel);
-                document.getElementById('fileName').textContent = file.name;
-                
-                const vertexCount = geometry.attributes.position.count;
-                updateStats(vertexCount, 0);
-                
-                resetView();
-                showNotification('DAE caricato!', 'success');
+            };
+            
+            reader.onerror = function() {
+                showNotification('❌ Errore lettura file DAE', 'error');
             };
             
             reader.readAsText(file);
@@ -887,4 +912,61 @@
                 const sources = mesh.getElementsByTagName('source');
                 let positionSource = null;
                 
-                for (let s
+                for (let s = 0; s < sources.length; s++) {
+                    const source = sources[s];
+                    if (source.getElementsByTagName('float_array').length > 0) {
+                        positionSource = source;
+                        break;
+                    }
+                }
+                
+                if (positionSource) {
+                    const floatArray = positionSource.getElementsByTagName('float_array')[0];
+                    if (floatArray) {
+                        const positionData = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
+                        
+                        for (let i = 0; i < positionData.length; i += 3) {
+                            if (i + 2 < positionData.length) {
+                                vertices.push(
+                                    positionData[i] || 0,
+                                    positionData[i + 1] || 0,
+                                    positionData[i + 2] || 0
+                                );
+                            }
+                        }
+                    }
+                }
+                
+                const triangles = mesh.getElementsByTagName('triangles')[0];
+                if (triangles) {
+                    const pElement = triangles.getElementsByTagName('p')[0];
+                    if (pElement) {
+                        const indices = pElement.textContent.trim().split(/\s+/).map(parseInt);
+                        
+                        for (let i = 0; i < indices.length; i += 3) {
+                            faces.push(indices[i], indices[i + 1], indices[i + 2]);
+                        }
+                    }
+                }
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            if (faces.length > 0) {
+                geometry.setIndex(faces);
+            }
+            
+            geometry.computeVertexNormals();
+            geometry.center();
+            
+            return geometry;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(init, 100);
+        });
+    </script>
+</body>
+</html>
