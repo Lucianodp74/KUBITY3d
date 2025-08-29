@@ -319,6 +319,7 @@
                 <button class="tool-btn" onclick="takeScreenshot()" title="Screenshot">📸</button>
                 <button class="tool-btn" onclick="resetView()" title="Reset Vista">🏠</button>
                 <button class="tool-btn" onclick="fitToView()" title="Adatta Vista">🎯</button>
+                <button class="tool-btn" onclick="centerModel()" title="Centra Modello">⊙</button>
                 <button class="tool-btn" onclick="toggleWireframe()" title="Wireframe">📐</button>
             </div>
             
@@ -706,6 +707,43 @@
             showNotification('🏠 Vista ripristinata', 'success');
         }
 
+        function centerModel() {
+            if (!currentModel) {
+                showNotification('❌ Nessun modello caricato', 'error');
+                return;
+            }
+
+            console.log('=== CENTRATURA MANUALE ===');
+            
+            // Calcola il bounding box del modello corrente
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            
+            console.log('Centro attuale:', center);
+            console.log('Posizione modello:', currentModel.position);
+            
+            // Sposta il modello per centrare il suo bounding box all'origine
+            currentModel.position.set(
+                -center.x + currentModel.position.x,
+                -center.z + currentModel.position.y, // Mantieni altezza base sopra piano
+                -center.z + currentModel.position.z
+            );
+            
+            // Assicurati che sia sopra il piano
+            const newBox = new THREE.Box3().setFromObject(currentModel);
+            const newSize = newBox.getSize(new THREE.Vector3());
+            const minY = newBox.min.y;
+            
+            if (minY < 0) {
+                currentModel.position.y += Math.abs(minY) + 0.1;
+            }
+            
+            console.log('Nuova posizione:', currentModel.position);
+            
+            showNotification('⊙ Modello centrato manualmente', 'success');
+        }
+
         function fitToView() {
             if (!currentModel) {
                 showNotification('❌ Nessun modello caricato', 'error');
@@ -716,11 +754,15 @@
             const size = box.getSize(new THREE.Vector3());
             const center = box.getCenter(new THREE.Vector3());
             
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const distance = Math.max(maxDim * 2, 5);
+            console.log('FitToView - Centro:', center);
+            console.log('FitToView - Dimensioni:', size);
             
-            camera.position.set(distance, distance * 0.7, distance);
-            camera.lookAt(center);
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const distance = Math.max(maxDim * 1.5, 5); // Un po' più vicino
+            
+            // Posiziona camera per guardare il centro del modello
+            camera.position.set(distance, distance * 0.8, distance);
+            camera.lookAt(center.x, center.y, center.z);
             
             targetRotX = 0;
             targetRotY = 0;
@@ -839,33 +881,55 @@
             currentModel.castShadow = true;
             currentModel.receiveShadow = true;
             
-            // Auto-fit del modello
-            const box = new THREE.Box3().setFromObject(currentModel);
+            // PRIMA: Calcola bounding box della geometria prima di qualsiasi modifica
+            geometry.computeBoundingBox();
+            const box = geometry.boundingBox;
             const size = box.getSize(new THREE.Vector3());
             const center = box.getCenter(new THREE.Vector3());
             
-            // Centra il modello
-            currentModel.position.sub(center);
+            console.log('PRIMA - Centro geometria:', center);
+            console.log('PRIMA - Dimensioni:', size);
+            
+            // CENTRA la geometria traducendo tutti i vertici
+            geometry.translate(-center.x, -center.y, -center.z);
+            
+            // Ricalcola bounding box dopo centratura
+            geometry.computeBoundingBox();
+            const newCenter = geometry.boundingBox.getCenter(new THREE.Vector3());
+            console.log('DOPO centratura - Centro:', newCenter); // Dovrebbe essere (0,0,0)
             
             // Scala se troppo grande o troppo piccolo
             const maxDim = Math.max(size.x, size.y, size.z);
-            if (maxDim > 8 || maxDim < 0.1) {
-                const scale = 4 / maxDim;
-                currentModel.scale.setScalar(scale);
+            let scaleFactor = 1;
+            
+            if (maxDim > 8) {
+                scaleFactor = 4 / maxDim;
+                console.log('Scaling down - fattore:', scaleFactor);
+            } else if (maxDim < 0.1) {
+                scaleFactor = 2 / maxDim;
+                console.log('Scaling up - fattore:', scaleFactor);
             }
             
-            // Posiziona sopra il piano
-            currentModel.position.y = Math.max(0, (size.y * currentModel.scale.y) / 2);
+            if (scaleFactor !== 1) {
+                currentModel.scale.setScalar(scaleFactor);
+            }
+            
+            // Posiziona il modello: centro alla origin (0,0,0), base sopra il piano
+            const finalHeight = size.y * scaleFactor;
+            currentModel.position.set(0, finalHeight / 2, 0);
+            
+            console.log('Posizione finale modello:', currentModel.position);
+            console.log('Scala finale:', currentModel.scale);
             
             scene.add(currentModel);
             
             document.getElementById('fileName').textContent = fileName;
             updateStats(geometry.attributes.position.count);
             
-            // Adatta automaticamente la vista
+            // Adatta automaticamente la vista al modello centrato
             fitToView();
             
-            showNotification(`✅ ${fileName} caricato con ${geometry.attributes.position.count} vertici!`, 'success');
+            showNotification(`✅ ${fileName} caricato e centrato con ${geometry.attributes.position.count} vertici!`, 'success');
         }
 
         function parseOBJ(data) {
