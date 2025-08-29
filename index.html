@@ -255,7 +255,7 @@
             
             <div class="section">
                 <h3>File Manager</h3>
-                <input type="file" id="fileInput" accept=".obj,.dae" style="display: none;">
+                <input type="file" id="fileInput" accept=".obj,.dae,.glb,.gltf" style="display: none;">
                 <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                     📁 Carica Modello 3D
                 </button>
@@ -826,8 +826,10 @@
                     loadOBJFile(file);
                 } else if (fileName.endsWith('.dae')) {
                     loadDAEFile(file);
+                } else if (fileName.endsWith('.glb') || fileName.endsWith('.gltf')) {
+                    showNotification('❌ GLB/GLTF non ancora supportato - usa OBJ o DAE', 'error');
                 } else {
-                    showNotification('❌ Formato non supportato. Usa .obj o .dae', 'error');
+                    showNotification('❌ Formato non supportato. Usa .obj, .dae', 'error');
                 }
             }
         });
@@ -1013,7 +1015,7 @@
                 throw new Error('File DAE vuoto');
             }
 
-            console.log('Parsing DAE...');
+            console.log('Parsing DAE file...');
             
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(data, "text/xml");
@@ -1021,49 +1023,84 @@
             // Verifica errori di parsing XML
             const parseError = xmlDoc.getElementsByTagName("parsererror");
             if (parseError.length > 0) {
+                console.error('Errore XML:', parseError[0].textContent);
                 throw new Error('File DAE non valido (errore XML)');
             }
             
             const vertices = [];
             const faces = [];
             
+            // Trova tutte le geometrie
             const geometries = xmlDoc.getElementsByTagName('geometry');
-            console.log(`Trovate ${geometries.length} geometrie`);
+            console.log(`Trovate ${geometries.length} geometrie DAE`);
             
             if (geometries.length === 0) {
                 throw new Error('Nessuna geometria trovata nel file DAE');
             }
             
+            let totalVertices = 0;
+            let totalFaces = 0;
+            
             for (let g = 0; g < geometries.length; g++) {
                 const geometry = geometries[g];
                 const mesh = geometry.getElementsByTagName('mesh')[0];
                 
-                if (!mesh) continue;
+                if (!mesh) {
+                    console.log(`Geometria ${g}: nessuna mesh trovata`);
+                    continue;
+                }
                 
-                // Trova i dati delle posizioni
+                console.log(`Processing geometria ${g}...`);
+                
+                // Trova i source con i dati delle posizioni
                 const sources = mesh.getElementsByTagName('source');
                 let positionSource = null;
                 
+                // Prima cerca un source con parametri X, Y, Z
                 for (let s = 0; s < sources.length; s++) {
                     const source = sources[s];
-                    const floatArray = source.getElementsByTagName('float_array')[0];
-                    if (floatArray) {
-                        const accessor = source.getElementsByTagName('accessor')[0];
-                        if (accessor) {
-                            const stride = parseInt(accessor.getAttribute('stride')) || 3;
-                            if (stride >= 3) {
+                    const accessor = source.getElementsByTagName('accessor')[0];
+                    
+                    if (accessor) {
+                        const params = accessor.getElementsByTagName('param');
+                        if (params.length >= 3) {
+                            const hasXYZ = params[0].getAttribute('name') === 'X' &&
+                                          params[1].getAttribute('name') === 'Y' &&
+                                          params[2].getAttribute('name') === 'Z';
+                            if (hasXYZ) {
                                 positionSource = source;
+                                console.log(`Trovato source posizioni con parametri XYZ`);
                                 break;
                             }
                         }
                     }
                 }
                 
+                // Se non trovato, cerca il primo source con stride 3
+                if (!positionSource) {
+                    for (let s = 0; s < sources.length; s++) {
+                        const source = sources[s];
+                        const accessor = source.getElementsByTagName('accessor')[0];
+                        const floatArray = source.getElementsByTagName('float_array')[0];
+                        
+                        if (accessor && floatArray) {
+                            const stride = parseInt(accessor.getAttribute('stride')) || 3;
+                            if (stride >= 3) {
+                                positionSource = source;
+                                console.log(`Trovato source posizioni con stride ${stride}`);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Estrai i vertici
                 if (positionSource) {
                     const floatArray = positionSource.getElementsByTagName('float_array')[0];
                     if (floatArray) {
                         const positionData = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
-                        console.log(`Trovati ${positionData.length / 3} vertici`);
+                        const vertexCount = positionData.length / 3;
+                        console.log(`Estrazione ${vertexCount} vertici dalla geometria ${g}`);
                         
                         for (let i = 0; i < positionData.length; i += 3) {
                             if (i + 2 < positionData.length) {
@@ -1074,34 +1111,42 @@
                                 );
                             }
                         }
+                        totalVertices += vertexCount;
                     }
+                } else {
+                    console.warn(`Geometria ${g}: nessun source di posizioni trovato`);
                 }
                 
-                // Trova i triangoli o poligoni
-                const primitives = mesh.getElementsByTagName('triangles');
-                for (let p = 0; p < primitives.length; p++) {
-                    const primitive = primitives[p];
-                    const pElement = primitive.getElementsByTagName('p')[0];
+                // Estrai i triangoli
+                const triangles = mesh.getElementsByTagName('triangles');
+                for (let t = 0; t < triangles.length; t++) {
+                    const triangleElement = triangles[t];
+                    const pElement = triangleElement.getElementsByTagName('p')[0];
+                    
                     if (pElement) {
                         const indices = pElement.textContent.trim().split(/\s+/).map(parseInt);
-                        const inputElements = primitive.getElementsByTagName('input');
+                        const inputElements = triangleElement.getElementsByTagName('input');
                         const stride = inputElements.length || 1;
                         
-                        console.log(`Trovati ${indices.length / stride / 3} triangoli`);
+                        console.log(`Triangoli: ${indices.length / stride / 3} con stride ${stride}`);
+                        
+                        // Offset per questa geometria
+                        const vertexOffset = totalVertices - (vertices.length / 3 - totalVertices);
                         
                         for (let i = 0; i < indices.length; i += 3 * stride) {
                             if (i + (3 * stride) <= indices.length) {
                                 faces.push(
-                                    indices[i],
-                                    indices[i + stride],
-                                    indices[i + 2 * stride]
+                                    indices[i] + vertexOffset,
+                                    indices[i + stride] + vertexOffset,
+                                    indices[i + 2 * stride] + vertexOffset
                                 );
+                                totalFaces++;
                             }
                         }
                     }
                 }
                 
-                // Se non ci sono triangoli, prova con polylist
+                // Estrai i polylist (poligoni)
                 const polylists = mesh.getElementsByTagName('polylist');
                 for (let p = 0; p < polylists.length; p++) {
                     const polylist = polylists[p];
@@ -1114,17 +1159,22 @@
                         const inputElements = polylist.getElementsByTagName('input');
                         const stride = inputElements.length || 1;
                         
+                        console.log(`Polylist: ${vcounts.length} poligoni`);
+                        
+                        const vertexOffset = totalVertices - (vertices.length / 3 - totalVertices);
+                        
                         let indexOffset = 0;
                         for (let i = 0; i < vcounts.length; i++) {
                             const vertexCount = vcounts[i];
                             if (vertexCount >= 3) {
-                                // Triangolazione a ventaglio
+                                // Triangolazione a ventaglio per poligoni
                                 for (let j = 1; j < vertexCount - 1; j++) {
                                     faces.push(
-                                        indices[indexOffset],
-                                        indices[indexOffset + j * stride],
-                                        indices[indexOffset + (j + 1) * stride]
+                                        indices[indexOffset] + vertexOffset,
+                                        indices[indexOffset + j * stride] + vertexOffset,
+                                        indices[indexOffset + (j + 1) * stride] + vertexOffset
                                     );
+                                    totalFaces++;
                                 }
                             }
                             indexOffset += vertexCount * stride;
@@ -1133,12 +1183,13 @@
                 }
             }
             
-            console.log(`DAE parsed: ${vertices.length / 3} vertici, ${faces.length / 3} triangoli`);
+            console.log(`DAE parsing completato: ${totalVertices} vertici, ${totalFaces} triangoli`);
             
             if (vertices.length === 0) {
-                throw new Error('Nessun vertice trovato nel file DAE');
+                throw new Error('Nessun vertice estratto dal file DAE');
             }
             
+            // Crea la geometria Three.js
             const geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             
