@@ -1,1212 +1,225 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>3D Viewer Pro - Funzionante</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #1a1a1a;
-            color: white;
-            overflow: hidden;
-            height: 100vh;
-        }
-        
-        .container {
-            display: flex;
-            height: 100vh;
-        }
-        
-        .sidebar {
-            width: 320px;
-            background: #2d2d2d;
-            border-right: 1px solid #444;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-        
-        .header {
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 8px;
-        }
-        
-        .subtitle {
-            font-size: 12px;
-            color: rgba(255,255,255,0.8);
-        }
-        
-        .section {
-            padding: 20px;
-            border-bottom: 1px solid #444;
-        }
-        
-        .section h3 {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            color: #4fc3f7;
-            font-weight: 600;
-        }
-        
-        .upload-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #4fc3f7, #29b6f6);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-weight: 500;
-            margin-bottom: 15px;
-        }
-        
-        .upload-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
-        }
-        
-        .sample-btns {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .sample-btn {
-            flex: 1;
-            padding: 10px;
-            background: transparent;
-            border: 1px solid #555;
-            border-radius: 6px;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        
-        .sample-btn:hover {
-            background: #404040;
-            border-color: #4fc3f7;
-        }
-        
-        .viewer {
-            flex: 1;
-            position: relative;
-            background: #000;
-        }
-        
-        .toolbar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            background: rgba(45, 45, 45, 0.9);
-            border-radius: 12px;
-            padding: 8px;
-            gap: 4px;
-            z-index: 100;
-        }
-        
-        .tool-btn {
-            width: 40px;
-            height: 40px;
-            background: transparent;
-            border: none;
-            border-radius: 8px;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .tool-btn:hover {
-            background: #555;
-            color: white;
-        }
-        
-        .nav-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            background: rgba(45, 45, 45, 0.9);
-            border-radius: 25px;
-            padding: 8px;
-            gap: 8px;
-            z-index: 100;
-        }
-        
-        .nav-btn {
-            width: 45px;
-            height: 45px;
-            background: transparent;
-            border: none;
-            border-radius: 50%;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        .nav-btn:hover {
-            background: #4fc3f7;
-            color: white;
-        }
-        
-        .view-grid, .material-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .view-btn, .material-btn {
-            padding: 10px;
-            background: #404040;
-            border: none;
-            border-radius: 6px;
-            color: #ccc;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        
-        .view-btn:hover, .material-btn:hover {
-            background: #4a4a4a;
-        }
-        
-        .view-btn.active, .material-btn.active {
-            background: #4fc3f7;
-            color: white;
-        }
-        
-        .info-card {
-            background: #383838;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .info-card h4 {
-            font-size: 12px;
-            color: #4fc3f7;
-            margin-bottom: 10px;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-            font-size: 11px;
-        }
-        
-        .info-label { color: #aaa; }
-        .info-value { color: white; font-weight: 500; }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(45, 45, 45, 0.95);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            border-left: 4px solid #4fc3f7;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            max-width: 300px;
-        }
-        
-        .notification.show { transform: translateX(0); }
-        .notification.success { border-left-color: #4caf50; }
-        .notification.error { border-left-color: #f44336; }
-        
-        #canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            cursor: grab;
-        }
-        
-        #canvas:active { cursor: grabbing; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3D Viewer – Demo GitHub Pages</title>
+  <style>
+    :root { --bg:#0e1116; --panel:#171b22; --text:#e8e8e8; --muted:#9aa4b2; --accent:#4da3ff; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    header { padding: 12px 16px; background: var(--panel); border-bottom: 1px solid #222831; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    header h1 { font-size: 16px; margin: 0 12px 0 0; font-weight: 600; letter-spacing: .2px; }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .controls input[type="file"] { display: none; }
+    .btn, .input, .link {
+      border: 1px solid #2a3140; background: #11151b; color: var(--text);
+      padding: 8px 10px; border-radius: 8px; font-size: 14px;
+    }
+    .btn { cursor: pointer; }
+    .btn:hover { border-color: var(--accent); }
+    .input { width: min(420px, 70vw); }
+    .hint { color: var(--muted); font-size: 12px; }
+    #viewer { position: relative; height: 100%; }
+    #dropzone {
+      position: absolute; inset: 0; border: 2px dashed #2a3140; border-radius: 12px;
+      display: grid; place-items: center; text-align: center; padding: 24px; pointer-events: none; transition: border-color .2s, background .2s;
+    }
+    #dropzone.active { border-color: var(--accent); background: rgba(77,163,255,0.05); }
+    #overlay { position:absolute; left:12px; bottom:12px; background: rgba(0,0,0,.45); padding:8px 10px; border-radius:8px; font-size:12px; color:#eaecef; }
+    a { color: var(--accent); text-decoration: none; }
+    .kbd { padding:1px 6px; border:1px solid #2a3140; border-bottom-width:2px; border-radius:6px; background:#0b0e13; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <div class="header">
-                <div class="logo">3D Viewer Pro</div>
-                <div class="subtitle">Versione Funzionante</div>
-            </div>
-            
-            <div class="section">
-                <h3>File Manager</h3>
-                <input type="file" id="fileInput" accept=".obj,.dae,.glb,.gltf" style="display: none;">
-                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                    📁 Carica Modello 3D
-                </button>
-                <div class="sample-btns">
-                    <button class="sample-btn" onclick="loadSample('house')">🏠 Casa</button>
-                    <button class="sample-btn" onclick="loadSample('cube')">🎲 Cubo</button>
-                    <button class="sample-btn" onclick="loadSample('sphere')">⚪ Sfera</button>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Visualizzazione</h3>
-                <div class="view-grid">
-                    <button class="view-btn active" id="solid-btn" onclick="setViewMode('solid')">Solido</button>
-                    <button class="view-btn" id="wireframe-btn" onclick="setViewMode('wireframe')">Wireframe</button>
-                </div>
-            </div>
-
-            <div class="section">
-                <h3>Materiali</h3>
-                <div class="material-grid">
-                    <button class="material-btn active" onclick="setMaterial('original')">Naturale</button>
-                    <button class="material-btn" onclick="setMaterial('colorful')">Colorato</button>
-                    <button class="material-btn" onclick="setMaterial('metal')">Metallo</button>
-                    <button class="material-btn" onclick="setMaterial('glass')">Vetro</button>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Statistiche</h3>
-                <div class="info-card">
-                    <h4>📊 Modello</h4>
-                    <div class="info-row">
-                        <span class="info-label">File:</span>
-                        <span class="info-value" id="fileName">Nessuno</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Vertici:</span>
-                        <span class="info-value" id="vertexCount">0</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">FPS:</span>
-                        <span class="info-value" id="fpsDisplay">60</span>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <h4>🎮 Controlli</h4>
-                    <div style="font-size: 10px; color: #aaa; line-height: 1.4;">
-                        🖱️ Mouse: Ruota modello<br>
-                        🎯 Scroll: Zoom avanti/indietro<br>
-                        ⌨️ Tasti 1-6: Viste rapide<br>
-                        📸 Toolbar: Screenshot e reset
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="viewer">
-            <div class="toolbar">
-                <button class="tool-btn" onclick="takeScreenshot()" title="Screenshot">📸</button>
-                <button class="tool-btn" onclick="resetView()" title="Reset Vista">🏠</button>
-                <button class="tool-btn" onclick="fitToView()" title="Adatta Vista">🎯</button>
-                <button class="tool-btn" onclick="centerModel()" title="Centra Modello">⊙</button>
-                <button class="tool-btn" onclick="toggleWireframe()" title="Wireframe">📐</button>
-            </div>
-            
-            <div id="canvas"></div>
-            
-            <div class="nav-controls">
-                <button class="nav-btn" onclick="setView('front')" title="Vista Frontale">F</button>
-                <button class="nav-btn" onclick="setView('back')" title="Vista Posteriore">B</button>
-                <button class="nav-btn" onclick="setView('left')" title="Vista Sinistra">L</button>
-                <button class="nav-btn" onclick="setView('right')" title="Vista Destra">R</button>
-                <button class="nav-btn" onclick="setView('top')" title="Vista dall'Alto">T</button>
-                <button class="nav-btn" onclick="setView('iso')" title="Vista Isometrica">I</button>
-            </div>
-        </div>
+<div id="app">
+  <header>
+    <h1>3D Viewer</h1>
+    <div class="controls">
+      <label for="file" class="btn">Carica file (.glb/.gltf)</label>
+      <input id="file" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" />
+      <input id="urlInput" class="input" type="url" placeholder="Incolla URL .glb/.gltf (anche del tuo repo)" />
+      <button id="loadUrlBtn" class="btn">Apri URL</button>
+      <span class="hint">Suggerimento: puoi anche trascinare un file nella finestra</span>
     </div>
-
-    <script>
-        let scene, camera, renderer, currentModel;
-        let mouseDown = false, mouseX = 0, mouseY = 0;
-        let rotationX = 0, rotationY = 0;
-        let targetRotX = 0, targetRotY = 0;
-        let frameCount = 0, lastTime = Date.now();
-
-        function init() {
-            console.log('Inizializzazione 3D Viewer...');
-            
-            const canvas = document.getElementById('canvas');
-            
-            // Scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
-
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(5, 3, 5);
-            camera.lookAt(0, 0, 0);
-
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true, 
-                preserveDrawingBuffer: true 
-            });
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.setClearColor(0x1a1a1a);
-
-            canvas.appendChild(renderer.domElement);
-
-            // Luci
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 10, 5);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-
-            const pointLight = new THREE.PointLight(0x4fc3f7, 0.3, 100);
-            pointLight.position.set(-10, 5, -5);
-            scene.add(pointLight);
-
-            // Griglia di riferimento
-            const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
-            scene.add(gridHelper);
-
-            // Piano di base
-            const planeGeometry = new THREE.PlaneGeometry(20, 20);
-            const planeMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x333333, 
-                transparent: true, 
-                opacity: 0.3 
-            });
-            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            plane.rotation.x = -Math.PI / 2;
-            plane.receiveShadow = true;
-            scene.add(plane);
-
-            setupControls();
-            animate();
-            
-            // Carica modello di default
-            loadSample('cube');
-            
-            window.addEventListener('resize', handleResize);
-
-            showNotification('🎉 3D Viewer caricato con successo!', 'success');
-            console.log('Inizializzazione completata');
-        }
-
-        function setupControls() {
-            const canvas = renderer.domElement;
-
-            // Mouse controls
-            canvas.addEventListener('mousedown', (e) => {
-                mouseDown = true;
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            canvas.addEventListener('mousemove', (e) => {
-                if (!mouseDown) return;
-
-                const deltaX = e.clientX - mouseX;
-                const deltaY = e.clientY - mouseY;
-
-                targetRotY += deltaX * 0.01;
-                targetRotX += deltaY * 0.01;
-                targetRotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotX));
-
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                mouseDown = false;
-            });
-
-            canvas.addEventListener('mouseleave', () => {
-                mouseDown = false;
-            });
-
-            // Zoom con scroll
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoom = e.deltaY * 0.001;
-                camera.position.multiplyScalar(1 + zoom);
-                
-                const distance = camera.position.length();
-                if (distance < 2) camera.position.normalize().multiplyScalar(2);
-                if (distance > 50) camera.position.normalize().multiplyScalar(50);
-            });
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                switch(e.key) {
-                    case '1': setView('front'); break;
-                    case '2': setView('back'); break;
-                    case '3': setView('left'); break;
-                    case '4': setView('right'); break;
-                    case '5': setView('top'); break;
-                    case '6': setView('iso'); break;
-                    case 'r': case 'R': resetView(); break;
-                    case 'w': case 'W': toggleWireframe(); break;
-                }
-            });
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Smooth rotation
-            rotationX += (targetRotX - rotationX) * 0.1;
-            rotationY += (targetRotY - rotationY) * 0.1;
-
-            if (currentModel) {
-                currentModel.rotation.x = rotationX;
-                currentModel.rotation.y = rotationY;
-            }
-
-            renderer.render(scene, camera);
-
-            // FPS counter
-            frameCount++;
-            const now = Date.now();
-            if (now > lastTime + 1000) {
-                const fps = Math.round((frameCount * 1000) / (now - lastTime));
-                document.getElementById('fpsDisplay').textContent = fps;
-                frameCount = 0;
-                lastTime = now;
-            }
-        }
-
-        function loadSample(type) {
-            console.log('Caricamento esempio:', type);
-            
-            // Rimuovi modello precedente
-            if (currentModel) {
-                scene.remove(currentModel);
-            }
-
-            let geometry, material;
-
-            switch (type) {
-                case 'house':
-                    currentModel = new THREE.Group();
-                    
-                    // Base casa
-                    const base = new THREE.Mesh(
-                        new THREE.BoxGeometry(3, 2, 3),
-                        new THREE.MeshLambertMaterial({ color: 0xd4a574 })
-                    );
-                    base.position.y = 1;
-                    base.castShadow = true;
-                    currentModel.add(base);
-                    
-                    // Tetto
-                    const roof = new THREE.Mesh(
-                        new THREE.ConeGeometry(2.2, 1.5, 4),
-                        new THREE.MeshLambertMaterial({ color: 0x8b4513 })
-                    );
-                    roof.position.y = 2.75;
-                    roof.rotation.y = Math.PI / 4;
-                    roof.castShadow = true;
-                    currentModel.add(roof);
-                    
-                    // Porta
-                    const door = new THREE.Mesh(
-                        new THREE.BoxGeometry(0.6, 1.2, 0.1),
-                        new THREE.MeshLambertMaterial({ color: 0x654321 })
-                    );
-                    door.position.set(0, 0.6, 1.55);
-                    currentModel.add(door);
-                    
-                    document.getElementById('fileName').textContent = 'Casa_Esempio.obj';
-                    updateStats(24);
-                    break;
-
-                case 'cube':
-                    geometry = new THREE.BoxGeometry(2, 2, 2);
-                    material = new THREE.MeshLambertMaterial({ color: 0x4fc3f7 });
-                    currentModel = new THREE.Mesh(geometry, material);
-                    currentModel.position.y = 1;
-                    currentModel.castShadow = true;
-                    document.getElementById('fileName').textContent = 'Cubo_Esempio.obj';
-                    updateStats(8);
-                    break;
-
-                case 'sphere':
-                    geometry = new THREE.SphereGeometry(1.2, 24, 16);
-                    material = new THREE.MeshLambertMaterial({ color: 0xff6b6b });
-                    currentModel = new THREE.Mesh(geometry, material);
-                    currentModel.position.y = 1.2;
-                    currentModel.castShadow = true;
-                    document.getElementById('fileName').textContent = 'Sfera_Esempio.obj';
-                    updateStats(338);
-                    break;
-            }
-
-            scene.add(currentModel);
-            resetView();
-            showNotification(`✅ Esempio "${type}" caricato!`, 'success');
-        }
-
-        function updateStats(vertexCount) {
-            document.getElementById('vertexCount').textContent = vertexCount.toLocaleString();
-        }
-
-        function setViewMode(mode) {
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-            
-            if (mode === 'solid') {
-                document.getElementById('solid-btn').classList.add('active');
-            } else {
-                document.getElementById('wireframe-btn').classList.add('active');
-            }
-
-            if (!currentModel) return;
-
-            applyWireframe(currentModel, mode === 'wireframe');
-            showNotification(`🎨 Modalità: ${mode}`, 'success');
-        }
-
-        function toggleWireframe() {
-            const wireframeBtn = document.getElementById('wireframe-btn');
-            const isWireframe = wireframeBtn.classList.contains('active');
-            
-            setViewMode(isWireframe ? 'solid' : 'wireframe');
-        }
-
-        function applyWireframe(object, wireframe) {
-            if (object.traverse) {
-                object.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(mat => mat.wireframe = wireframe);
-                        } else {
-                            child.material.wireframe = wireframe;
-                        }
-                    }
-                });
-            } else if (object.material) {
-                if (Array.isArray(object.material)) {
-                    object.material.forEach(mat => mat.wireframe = wireframe);
-                } else {
-                    object.material.wireframe = wireframe;
-                }
-            }
-        }
-
-        function setMaterial(materialType) {
-            document.querySelectorAll('.material-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            if (!currentModel) return;
-
-            let material;
-
-            switch(materialType) {
-                case 'original':
-                    // Mantieni materiali originali - per ora usa colorful
-                    material = new THREE.MeshLambertMaterial({
-                        color: 0xcccccc,
-                        side: THREE.DoubleSide
-                    });
-                    break;
-                
-                case 'colorful':
-                    material = new THREE.MeshLambertMaterial({
-                        color: 0x4fc3f7,
-                        side: THREE.DoubleSide
-                    });
-                    break;
-                
-                case 'metal':
-                    material = new THREE.MeshPhongMaterial({
-                        color: 0x888888,
-                        shininess: 100,
-                        specular: 0x222222
-                    });
-                    break;
-                
-                case 'glass':
-                    material = new THREE.MeshLambertMaterial({
-                        color: 0xffffff,
-                        transparent: true,
-                        opacity: 0.4
-                    });
-                    break;
-            }
-
-            applyMaterialToModel(currentModel, material);
-            showNotification(`🎨 Materiale: ${materialType}`, 'success');
-        }
-
-        function applyMaterialToModel(object, material) {
-            if (object.traverse) {
-                object.traverse((child) => {
-                    if (child.isMesh) {
-                        child.material = material;
-                    }
-                });
-            } else if (object.material) {
-                object.material = material;
-            }
-        }
-
-        function setView(view) {
-            if (!currentModel) return;
-
-            const distance = 7;
-
-            switch (view) {
-                case 'front':
-                    camera.position.set(0, 2, distance);
-                    break;
-                case 'back':
-                    camera.position.set(0, 2, -distance);
-                    break;
-                case 'left':
-                    camera.position.set(-distance, 2, 0);
-                    break;
-                case 'right':
-                    camera.position.set(distance, 2, 0);
-                    break;
-                case 'top':
-                    camera.position.set(0, distance, 0);
-                    break;
-                case 'iso':
-                    camera.position.set(distance, distance * 0.7, distance);
-                    break;
-            }
-
-            camera.lookAt(0, 1, 0);
-            targetRotX = 0;
-            targetRotY = 0;
-            showNotification(`📐 Vista: ${view.toUpperCase()}`, 'success');
-        }
-
-        function resetView() {
-            camera.position.set(5, 3, 5);
-            camera.lookAt(0, 1, 0);
-            targetRotX = 0;
-            targetRotY = 0;
-            showNotification('🏠 Vista ripristinata', 'success');
-        }
-
-        function centerModel() {
-            if (!currentModel) {
-                showNotification('❌ Nessun modello caricato', 'error');
-                return;
-            }
-
-            console.log('=== CENTRATURA MANUALE ===');
-            
-            // Calcola il bounding box del modello corrente
-            const box = new THREE.Box3().setFromObject(currentModel);
-            const size = box.getSize(new THREE.Vector3());
-            const center = box.getCenter(new THREE.Vector3());
-            
-            console.log('Centro attuale:', center);
-            console.log('Posizione modello:', currentModel.position);
-            
-            // Sposta il modello per centrare il suo bounding box all'origine
-            currentModel.position.set(
-                -center.x + currentModel.position.x,
-                -center.z + currentModel.position.y, // Mantieni altezza base sopra piano
-                -center.z + currentModel.position.z
-            );
-            
-            // Assicurati che sia sopra il piano
-            const newBox = new THREE.Box3().setFromObject(currentModel);
-            const newSize = newBox.getSize(new THREE.Vector3());
-            const minY = newBox.min.y;
-            
-            if (minY < 0) {
-                currentModel.position.y += Math.abs(minY) + 0.1;
-            }
-            
-            console.log('Nuova posizione:', currentModel.position);
-            
-            showNotification('⊙ Modello centrato manualmente', 'success');
-        }
-
-        function fitToView() {
-            if (!currentModel) {
-                showNotification('❌ Nessun modello caricato', 'error');
-                return;
-            }
-
-            const box = new THREE.Box3().setFromObject(currentModel);
-            const size = box.getSize(new THREE.Vector3());
-            const center = box.getCenter(new THREE.Vector3());
-            
-            console.log('FitToView - Centro:', center);
-            console.log('FitToView - Dimensioni:', size);
-            
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const distance = Math.max(maxDim * 1.5, 5); // Un po' più vicino
-            
-            // Posiziona camera per guardare il centro del modello
-            camera.position.set(distance, distance * 0.8, distance);
-            camera.lookAt(center.x, center.y, center.z);
-            
-            targetRotX = 0;
-            targetRotY = 0;
-            
-            showNotification('🎯 Vista adattata al modello', 'success');
-        }
-
-        function takeScreenshot() {
-            if (!renderer) return;
-
-            renderer.render(scene, camera);
-            const dataURL = renderer.domElement.toDataURL('image/png');
-
-            const link = document.createElement('a');
-            link.download = '3d-screenshot-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.png';
-            link.href = dataURL;
-            link.click();
-
-            showNotification('📸 Screenshot salvato!', 'success');
-        }
-
-        function handleResize() {
-            const canvas = document.getElementById('canvas');
-            if (camera && renderer) {
-                camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            }
-        }
-
-        function showNotification(message, type = 'success') {
-            // Rimuovi notifiche esistenti
-            document.querySelectorAll('.notification').forEach(n => n.remove());
-
-            const notification = document.createElement('div');
-            notification.className = 'notification ' + type;
-            notification.textContent = message;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => notification.classList.add('show'), 100);
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-
-        // File upload handlers
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const fileName = file.name.toLowerCase();
-                
-                showNotification(`📁 Caricamento ${file.name}...`, 'success');
-                
-                if (fileName.endsWith('.obj')) {
-                    loadOBJFile(file);
-                } else if (fileName.endsWith('.dae')) {
-                    loadDAEFile(file);
-                } else if (fileName.endsWith('.glb') || fileName.endsWith('.gltf')) {
-                    showNotification('❌ GLB/GLTF non ancora supportato - usa OBJ o DAE', 'error');
-                } else {
-                    showNotification('❌ Formato non supportato. Usa .obj, .dae', 'error');
-                }
-            }
-        });
-
-        function loadOBJFile(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const objData = e.target.result;
-                    const geometry = parseOBJ(objData);
-                    
-                    createModelFromGeometry(geometry, file.name);
-                    
-                } catch (error) {
-                    console.error('Errore OBJ:', error);
-                    showNotification('❌ Errore caricamento OBJ: ' + error.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function loadDAEFile(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const daeData = e.target.result;
-                    const geometry = parseDAE(daeData);
-                    
-                    createModelFromGeometry(geometry, file.name);
-                    
-                } catch (error) {
-                    console.error('Errore DAE:', error);
-                    showNotification('❌ Errore caricamento DAE: ' + error.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function createModelFromGeometry(geometry, fileName) {
-            if (currentModel) {
-                scene.remove(currentModel);
-            }
-            
-            // Materiale grigio neutro che mostra bene le forme
-            const material = new THREE.MeshLambertMaterial({ 
-                color: 0xcccccc,
-                side: THREE.DoubleSide 
-            });
-            
-            currentModel = new THREE.Mesh(geometry, material);
-            currentModel.castShadow = true;
-            currentModel.receiveShadow = true;
-            
-            // PRIMA: Calcola bounding box della geometria prima di qualsiasi modifica
-            geometry.computeBoundingBox();
-            const box = geometry.boundingBox;
-            const size = box.getSize(new THREE.Vector3());
-            const center = box.getCenter(new THREE.Vector3());
-            
-            console.log('PRIMA - Centro geometria:', center);
-            console.log('PRIMA - Dimensioni:', size);
-            
-            // CENTRA la geometria traducendo tutti i vertici
-            geometry.translate(-center.x, -center.y, -center.z);
-            
-            // Ricalcola bounding box dopo centratura
-            geometry.computeBoundingBox();
-            const newCenter = geometry.boundingBox.getCenter(new THREE.Vector3());
-            console.log('DOPO centratura - Centro:', newCenter); // Dovrebbe essere (0,0,0)
-            
-            // Scala se troppo grande o troppo piccolo
-            const maxDim = Math.max(size.x, size.y, size.z);
-            let scaleFactor = 1;
-            
-            if (maxDim > 8) {
-                scaleFactor = 4 / maxDim;
-                console.log('Scaling down - fattore:', scaleFactor);
-            } else if (maxDim < 0.1) {
-                scaleFactor = 2 / maxDim;
-                console.log('Scaling up - fattore:', scaleFactor);
-            }
-            
-            if (scaleFactor !== 1) {
-                currentModel.scale.setScalar(scaleFactor);
-            }
-            
-            // Posiziona il modello: centro alla origin (0,0,0), base sopra il piano
-            const finalHeight = size.y * scaleFactor;
-            currentModel.position.set(0, finalHeight / 2, 0);
-            
-            console.log('Posizione finale modello:', currentModel.position);
-            console.log('Scala finale:', currentModel.scale);
-            
-            scene.add(currentModel);
-            
-            document.getElementById('fileName').textContent = fileName;
-            updateStats(geometry.attributes.position.count);
-            
-            // Adatta automaticamente la vista al modello centrato
-            fitToView();
-            
-            showNotification(`✅ ${fileName} caricato e centrato con ${geometry.attributes.position.count} vertici!`, 'success');
-        }
-
-        function parseOBJ(data) {
-            if (!data || data.length === 0) {
-                throw new Error('File OBJ vuoto');
-            }
-
-            const vertices = [];
-            const faces = [];
-            const normals = [];
-            
-            const lines = data.split('\n');
-            console.log(`Parsing OBJ: ${lines.length} righe`);
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                
-                if (line.startsWith('v ')) {
-                    const parts = line.split(/\s+/);
-                    if (parts.length >= 4) {
-                        vertices.push(
-                            parseFloat(parts[1]) || 0,
-                            parseFloat(parts[2]) || 0,
-                            parseFloat(parts[3]) || 0
-                        );
-                    }
-                } else if (line.startsWith('vn ')) {
-                    const parts = line.split(/\s+/);
-                    if (parts.length >= 4) {
-                        normals.push(
-                            parseFloat(parts[1]) || 0,
-                            parseFloat(parts[2]) || 0,
-                            parseFloat(parts[3]) || 0
-                        );
-                    }
-                } else if (line.startsWith('f ')) {
-                    const parts = line.split(/\s+/);
-                    parts.shift(); // Rimuovi 'f'
-                    
-                    if (parts.length >= 3) {
-                        // Converti facce in triangoli
-                        const faceVertices = [];
-                        for (let j = 0; j < parts.length; j++) {
-                            const vertexData = parts[j].split('/');
-                            const vertexIndex = parseInt(vertexData[0]);
-                            if (vertexIndex && vertexIndex > 0) {
-                                faceVertices.push(vertexIndex - 1);
-                            }
-                        }
-                        
-                        // Triangolazione semplice per facce con più di 3 vertici
-                        for (let j = 1; j < faceVertices.length - 1; j++) {
-                            faces.push(faceVertices[0], faceVertices[j], faceVertices[j + 1]);
-                        }
-                    }
-                }
-            }
-            
-            console.log(`OBJ parsed: ${vertices.length / 3} vertici, ${faces.length / 3} triangoli`);
-            
-            if (vertices.length === 0) {
-                throw new Error('Nessun vertice trovato nel file OBJ');
-            }
-            
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            
-            if (faces.length > 0) {
-                geometry.setIndex(faces);
-            }
-            
-            // Calcola normali se non presenti
-            geometry.computeVertexNormals();
-            geometry.computeBoundingBox();
-            
-            return geometry;
-        }
-
-        function parseDAE(data) {
-            if (!data || data.length === 0) {
-                throw new Error('File DAE vuoto');
-            }
-
-            console.log('Parsing DAE file...');
-            
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(data, "text/xml");
-            
-            // Verifica errori di parsing XML
-            const parseError = xmlDoc.getElementsByTagName("parsererror");
-            if (parseError.length > 0) {
-                console.error('Errore XML:', parseError[0].textContent);
-                throw new Error('File DAE non valido (errore XML)');
-            }
-            
-            const vertices = [];
-            const faces = [];
-            
-            // Trova tutte le geometrie
-            const geometries = xmlDoc.getElementsByTagName('geometry');
-            console.log(`Trovate ${geometries.length} geometrie DAE`);
-            
-            if (geometries.length === 0) {
-                throw new Error('Nessuna geometria trovata nel file DAE');
-            }
-            
-            let totalVertices = 0;
-            let totalFaces = 0;
-            
-            for (let g = 0; g < geometries.length; g++) {
-                const geometry = geometries[g];
-                const mesh = geometry.getElementsByTagName('mesh')[0];
-                
-                if (!mesh) {
-                    console.log(`Geometria ${g}: nessuna mesh trovata`);
-                    continue;
-                }
-                
-                console.log(`Processing geometria ${g}...`);
-                
-                // Trova i source con i dati delle posizioni
-                const sources = mesh.getElementsByTagName('source');
-                let positionSource = null;
-                
-                // Prima cerca un source con parametri X, Y, Z
-                for (let s = 0; s < sources.length; s++) {
-                    const source = sources[s];
-                    const accessor = source.getElementsByTagName('accessor')[0];
-                    
-                    if (accessor) {
-                        const params = accessor.getElementsByTagName('param');
-                        if (params.length >= 3) {
-                            const hasXYZ = params[0].getAttribute('name') === 'X' &&
-                                          params[1].getAttribute('name') === 'Y' &&
-                                          params[2].getAttribute('name') === 'Z';
-                            if (hasXYZ) {
-                                positionSource = source;
-                                console.log(`Trovato source posizioni con parametri XYZ`);
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                // Se non trovato, cerca il primo source con stride 3
-                if (!positionSource) {
-                    for (let s = 0; s < sources.length; s++) {
-                        const source = sources[s];
-                        const accessor = source.getElementsByTagName('accessor')[0];
-                        const floatArray = source.getElementsByTagName('float_array')[0];
-                        
-                        if (accessor && floatArray) {
-                            const stride = parseInt(accessor.getAttribute('stride')) || 3;
-                            if (stride >= 3) {
-                                positionSource = source;
-                                console.log(`Trovato source posizioni con stride ${stride}`);
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                // Estrai i vertici
-                if (positionSource) {
-                    const floatArray = positionSource.getElementsByTagName('float_array')[0];
-                    if (floatArray) {
-                        const positionData = floatArray.textContent.trim().split(/\s+/).map(parseFloat);
-                        const vertexCount = positionData.length / 3;
-                        console.log(`Estrazione ${vertexCount} vertici dalla geometria ${g}`);
-                        
-                        for (let i = 0; i < positionData.length; i += 3) {
-                            if (i + 2 < positionData.length) {
-                                vertices.push(
-                                    positionData[i] || 0,
-                                    positionData[i + 1] || 0,
-                                    positionData[i + 2] || 0
-                                );
-                            }
-                        }
-                        totalVertices += vertexCount;
-                    }
-                } else {
-                    console.warn(`Geometria ${g}: nessun source di posizioni trovato`);
-                }
-                
-                // Estrai i triangoli
-                const triangles = mesh.getElementsByTagName('triangles');
-                for (let t = 0; t < triangles.length; t++) {
-                    const triangleElement = triangles[t];
-                    const pElement = triangleElement.getElementsByTagName('p')[0];
-                    
-                    if (pElement) {
-                        const indices = pElement.textContent.trim().split(/\s+/).map(parseInt);
-                        const inputElements = triangleElement.getElementsByTagName('input');
-                        const stride = inputElements.length || 1;
-                        
-                        console.log(`Triangoli: ${indices.length / stride / 3} con stride ${stride}`);
-                        
-                        // Offset per questa geometria
-                        const vertexOffset = totalVertices - (vertices.length / 3 - totalVertices);
-                        
-                        for (let i = 0; i < indices.length; i += 3 * stride) {
-                            if (i + (3 * stride) <= indices.length) {
-                                faces.push(
-                                    indices[i] + vertexOffset,
-                                    indices[i + stride] + vertexOffset,
-                                    indices[i + 2 * stride] + vertexOffset
-                                );
-                                totalFaces++;
-                            }
-                        }
-                    }
-                }
-                
-                // Estrai i polylist (poligoni)
-                const polylists = mesh.getElementsByTagName('polylist');
-                for (let p = 0; p < polylists.length; p++) {
-                    const polylist = polylists[p];
-                    const pElement = polylist.getElementsByTagName('p')[0];
-                    const vcountElement = polylist.getElementsByTagName('vcount')[0];
-                    
-                    if (pElement && vcountElement) {
-                        const indices = pElement.textContent.trim().split(/\s+/).map(parseInt);
-                        const vcounts = vcountElement.textContent.trim().split(/\s+/).map(parseInt);
-                        const inputElements = polylist.getElementsByTagName('input');
-                        const stride = inputElements.length || 1;
-                        
-                        console.log(`Polylist: ${vcounts.length} poligoni`);
-                        
-                        const vertexOffset = totalVertices - (vertices.length / 3 - totalVertices);
-                        
-                        let indexOffset = 0;
-                        for (let i = 0; i < vcounts.length; i++) {
-                            const vertexCount = vcounts[i];
-                            if (vertexCount >= 3) {
-                                // Triangolazione a ventaglio per poligoni
-                                for (let j = 1; j < vertexCount - 1; j++) {
-                                    faces.push(
-                                        indices[indexOffset] + vertexOffset,
-                                        indices[indexOffset + j * stride] + vertexOffset,
-                                        indices[indexOffset + (j + 1) * stride] + vertexOffset
-                                    );
-                                    totalFaces++;
-                                }
-                            }
-                            indexOffset += vertexCount * stride;
-                        }
-                    }
-                }
-            }
-            
-            console.log(`DAE parsing completato: ${totalVertices} vertici, ${totalFaces} triangoli`);
-            
-            if (vertices.length === 0) {
-                throw new Error('Nessun vertice estratto dal file DAE');
-            }
-            
-            // Crea la geometria Three.js
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            
-            if (faces.length > 0) {
-                geometry.setIndex(faces);
-            }
-            
-            geometry.computeVertexNormals();
-            geometry.computeBoundingBox();
-            
-            return geometry;
-        }
-
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(init, 100);
-        });
-    </script>
+  </header>
+
+  <div id="viewer">
+    <div id="dropzone">
+      <div>
+        <div style="font-weight:600; margin-bottom:6px;">Trascina qui un file .glb / .gltf</div>
+        <div class="hint">Oppure usa “Carica file” o incolla un URL</div>
+      </div>
+    </div>
+    <div id="overlay">
+      <div><span class="kbd">tasto sinistro</span> ruota • <span class="kbd">rotellina</span> zoom • <span class="kbd">tasto destro</span> pan</div>
+    </div>
+  </div>
+</div>
+
+<!-- Usa moduli ES dal CDN (Three.js + loaders + controls) -->
+<script type="module">
+  import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js";
+  import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/controls/OrbitControls.js";
+  import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/loaders/GLTFLoader.js";
+  import { DRACOLoader } from "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/loaders/DRACOLoader.js";
+
+  // --- Setup renderer, scene, camera ---
+  const container = document.getElementById("viewer");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = null; // trasparente, si vede lo sfondo scuro del layout
+
+  const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 5000);
+  camera.position.set(2.5, 1.8, 3.2);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // Luci “neutre”
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+  dir.position.set(5, 10, 7);
+  scene.add(dir);
+
+  // Piano/griglia opzionale per contesto
+  const grid = new THREE.GridHelper(10, 10);
+  grid.material.opacity = 0.2; grid.material.transparent = true;
+  scene.add(grid);
+
+  // Loader GLTF + DRACO (per modelli compressi)
+  const gltfLoader = new GLTFLoader();
+  const draco = new DRACOLoader();
+  draco.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/libs/draco/");
+  gltfLoader.setDRACOLoader(draco);
+
+  // UI
+  const fileInput = document.getElementById("file");
+  const urlInput = document.getElementById("urlInput");
+  const loadUrlBtn = document.getElementById("loadUrlBtn");
+  const dropzone = document.getElementById("dropzone");
+
+  let currentRoot = null;
+
+  function clearScenePreviousModel() {
+    if (!currentRoot) return;
+    scene.remove(currentRoot);
+    currentRoot.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+      if (obj.texture) obj.texture.dispose?.();
+    });
+    currentRoot = null;
+  }
+
+  function frameObject(object3D) {
+    const box = new THREE.Box3().setFromObject(object3D);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    // Posiziona il target dei controls al centro del modello
+    controls.target.copy(center);
+
+    // Calcola distanza camera per inquadrare l’oggetto
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = camera.fov * (Math.PI / 180);
+    let cameraZ = Math.abs(maxDim / (2 * Math.tan(fov / 2)));
+
+    cameraZ *= 1.5; // margine
+    camera.position.set(center.x + cameraZ * 0.4, center.y + cameraZ * 0.4, center.z + cameraZ);
+    camera.near = cameraZ / 100;
+    camera.far = cameraZ * 100;
+    camera.updateProjectionMatrix();
+    controls.update();
+  }
+
+  async function loadFromUrl(url) {
+    try {
+      const isSameOrigin = new URL(url, location.href).origin === location.origin;
+      // Con GitHub Pages è meglio usare file nello stesso dominio (repo) per evitare CORS
+      const src = url;
+      clearScenePreviousModel();
+      const { scene: gltfScene } = await gltfLoader.loadAsync(src);
+      currentRoot = gltfScene;
+      scene.add(gltfScene);
+      frameObject(gltfScene);
+      dropzone.classList.remove("active");
+    } catch (e) {
+      alert("Errore nel caricamento dal URL. Verifica che il file sia accessibile (CORS) e che l’URL sia corretto.");
+      console.error(e);
+    }
+  }
+
+  async function loadFromFile(file) {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    try {
+      clearScenePreviousModel();
+      const { scene: gltfScene } = await gltfLoader.loadAsync(url);
+      currentRoot = gltfScene;
+      scene.add(gltfScene);
+      frameObject(gltfScene);
+    } catch (e) {
+      alert("Errore nel caricamento del file. Verifica che sia un .glb/.gltf valido.");
+      console.error(e);
+    } finally {
+      // rilascia l’URL quando non serve più (dopo il frame successivo per sicurezza)
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+  }
+
+  // Eventi UI
+  document.querySelector('label[for="file"]').addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", (e) => loadFromFile(e.target.files[0]));
+  loadUrlBtn.addEventListener("click", () => {
+    if (urlInput.value.trim()) loadFromUrl(urlInput.value.trim());
+  });
+  urlInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && urlInput.value.trim()) loadFromUrl(urlInput.value.trim());
+  });
+
+  // Drag & drop
+  window.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("active"); });
+  window.addEventListener("dragleave", () => dropzone.classList.remove("active"));
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("active");
+    const file = e.dataTransfer.files?.[0];
+    if (file) loadFromFile(file);
+  });
+
+  // Caricamento tramite query string ?model=percorso/nel/repo.glb
+  const params = new URLSearchParams(location.search);
+  const qsModel = params.get("model");
+  if (qsModel) {
+    // Esempio: https://tuonome.github.io/tuo-repo/index.html?model=assets/modello.glb
+    loadFromUrl(qsModel);
+  }
+
+  // Resize
+  function onResize() {
+    const { clientWidth:w, clientHeight:h } = container;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+  window.addEventListener("resize", onResize);
+  onResize();
+
+  // Loop
+  renderer.setAnimationLoop(() => {
+    controls.update();
+    renderer.render(scene, camera);
+  });
+</script>
 </body>
 </html>
